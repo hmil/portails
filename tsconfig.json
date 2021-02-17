@@ -16,7 +16,8 @@
         "strict": true,
         "target": "es5",
         "baseUrl": "src",
-        "outDir": "build/tsc/"
+        "outDir": "build/tsc/",
+        "allowJs": true
     },
     "include": [
         "src/"

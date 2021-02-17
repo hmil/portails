@@ -5,7 +5,6 @@ import { GameLoop } from 'lib/game-loop';
 import { Graphics } from 'lib/graphics';
 import { Level1 } from 'lib/levels/level1';
 import { Physics } from 'lib/physics';
-import { GameWorld } from 'lib/game-world';
 
 async function main() {
 
@@ -14,11 +13,10 @@ async function main() {
 
     const graphics = new Graphics(assets);
     const physics = new Physics();
-    const world = new GameWorld(physics, graphics);
-    const controller = new Controller(world, physics, graphics);
+    const controller = new Controller(physics, graphics);
     const gameLoop = new GameLoop(physics, graphics, controller);
 
-    const level = new Level1(world);
+    const level = new Level1(physics.world, graphics);
     level.init();
 
     gameLoop.start();

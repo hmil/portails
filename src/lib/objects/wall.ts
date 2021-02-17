@@ -1,17 +1,31 @@
 import { Assets } from "lib/assets";
-import { Sprite } from "lib/graphics";
 import { GameObject } from "./game-object";
 import * as planck from 'planck-js';
 
-export class Wall implements GameObject, Sprite {
+export class Wall extends GameObject<[number, number, number, number, number?]> {
 
     public body?: planck.Body;
     public readonly sprite = this;
+    public width = 0;
+    public height = 0;
+    public angle = 0;
+    public x = 0;
+    public y = 0;
 
-    constructor(private readonly x: number, private readonly y: number, private width: number, private height: number, private angle: number = 0) {
+    readonly zIndex = 3;
+
+    public init([x, y, width, height, angle]: [number, number, number, number, number?]) {
+        this.x = x;
+        this.y = y;
+        this.width = width;
+        this.height = height;
+        this.angle = angle ?? 0;
+
+        this.createBody(this.world);
+        this.graphics.addSprite(this);
     }
-
-    public createBody(world: planck.World) {
+    
+    private createBody(world: planck.World) {
         this.body = world.createBody({
             position: planck.Vec2(this.x + this.width/2, this.y + this.height / 2),
             angle: this.angle

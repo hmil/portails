@@ -36,7 +36,6 @@ export class GameLoop {
         const delta = time - this.lastTime;
         this.lastTime = time;
 
-        this.controls.update();
         this.physics.step(delta);
         this.graphics.draw();
     
