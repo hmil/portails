@@ -1,9 +1,7 @@
 import { Assets } from 'lib/assets';
 import { SCREEN_HEIGHT, SCREEN_WIDTH } from 'lib/graphics';
-import { Sprite } from 'lib/sprite';
 import * as planck from 'planck-js';
 import { Vec2 } from 'planck-js';
-import * as Rematrix from 'rematrix';
 
 import { GameObject, Portalizable } from './game-object';
 import { Portal } from './portal';
@@ -114,9 +112,9 @@ export class PlayerCharacter extends GameObject implements Portalizable {
 
         const camera = this.graphics.getMainCamera();
         camera.resetTransform();
+        camera.translate(-SCREEN_WIDTH/2, -SCREEN_HEIGHT/2);
         camera.rotate(this.body.getAngle());
         camera.translate(this.body.getPosition().x, this.body.getPosition().y);
-        // camera.translate(SCREEN_WIDTH/2, SCREEN_HEIGHT/2);
         requestAnimationFrame(this.update);
     }
 
@@ -215,7 +213,7 @@ export class PlayerCharacter extends GameObject implements Portalizable {
 
         let f = 1;
         this.world.rayCast(start, end, (fixture, point, normal, fraction) => {
-            if (fraction < f) {
+            if (fraction < f && fixture.getUserData() !== 'portal-gate' && fixture.getUserData() !== 'portal') {
                 const position = Vec2(point.x, point.y);
                 console.log(normal);
                 if (evt.button === 0) {

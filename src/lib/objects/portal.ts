@@ -1,4 +1,4 @@
-import { vec2 } from "../gl-matrix";
+import { mat3, vec2 } from "gl-matrix";
 import { Camera, SCREEN_HEIGHT, SCREEN_WIDTH } from "lib/graphics";
 import { PortalService } from "lib/PortalService";
 import * as planck from "planck-js";
@@ -135,11 +135,11 @@ export class Portal extends GameObject<PortalData> {
             userData: 'portal'
         });
         body.createFixture({
-            shape: planck.Box(0.5, 0.2, Vec2(-0.55, -HEIGHT/2 - 0.1)),
+            shape: planck.Box(0.5, 0.1, Vec2(-0.55, -HEIGHT/2 - 0.1)),
             userData: 'portal-gate'
         });
         body.createFixture({
-            shape: planck.Box(0.5, 0.2, Vec2(-0.55, HEIGHT/2 + 0.1)),
+            shape: planck.Box(0.5, 0.1, Vec2(-0.55, HEIGHT/2 + 0.1)),
             userData: 'portal-gate'
         });
 
@@ -198,7 +198,7 @@ export class Portal extends GameObject<PortalData> {
     private renderPortalPerspective(camera: Camera, p1: IPortal, p2: IPortal) {
         const angle = (p1.body.getAngle() - p2.body.getAngle() + Math.PI) % (2 * Math.PI);
         camera.resetTransform();
-        camera.transform = this.graphics.getMainCamera().transform;            
+        mat3.copy(camera.transform, this.graphics.getMainCamera().transform);
         camera.translate(-p2.body.getPosition().x, -p2.body.getPosition().y);
         camera.rotate(angle);
         camera.translate(p1.body.getPosition().x, p1.body.getPosition().y);
@@ -210,7 +210,7 @@ export class Portal extends GameObject<PortalData> {
         ctx.fillStyle = color;
         ctx.translate(portal.body.getPosition().x, portal.body.getPosition().y);
         ctx.rotate(portal.body.getAngle());
-        ctx.fillRect(-WIDTH/2, -HEIGHT/2, WIDTH, HEIGHT);
+        ctx.fillRect(-WIDTH/2, -(HEIGHT - 0.2)/2, WIDTH, (HEIGHT - 0.2));
 
         // ctx.lineWidth = 0.05;
         // ctx.strokeRect(-1.05, -HEIGHT/2 - 0.2, 1, 0.2);

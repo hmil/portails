@@ -20,8 +20,8 @@
   },
   "dependencies": {
     "@types/matter-js": "^0.14.10",
+    "gl-matrix": "^3.3.0",
     "matter-js": "^0.16.1",
-    "planck-js": "^0.3.23",
-    "rematrix": "^0.7.1"
+    "planck-js": "^0.3.23"
   }
 }

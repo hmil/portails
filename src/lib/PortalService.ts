@@ -1,4 +1,4 @@
-import { vec2 } from './gl-matrix';
+import { vec2 } from "gl-matrix";
 
 export class PortalService {
 

@@ -1,16 +1,22 @@
+precision lowp float;
+
 attribute vec4 aVertexPosition;
 attribute vec2 aScreenPosition;
 
-uniform mat4 uModelViewMatrix;
-uniform mat4 uProjectionMatrix;
-uniform vec2 uScreenSize;
+uniform highp vec2 uScreenSize;
+uniform mat3 uViewMatrix;
 
 varying vec2 vUv;
-varying vec2 vScreenCoord;
+varying vec2 vWorldCoord;
+
+
+vec2 displayToWorldCoordinates(in vec2 displayCoords) {
+    return vec2(uViewMatrix * vec3(displayCoords, 1.0));
+}
 
 void main() {
-    gl_Position = uProjectionMatrix * uModelViewMatrix * aVertexPosition;
+    gl_Position = aVertexPosition;
     vec2 uvPosition = vec2((aVertexPosition.x + 1.0) / 2.0, 1.0 - (aVertexPosition.y + 1.0) / 2.0);
     vUv = uvPosition;
-    vScreenCoord = vec2(uvPosition.x * uScreenSize.x, uvPosition.y * uScreenSize.y);
+    vWorldCoord = displayToWorldCoordinates(vec2(uvPosition.x * uScreenSize.x, uvPosition.y * uScreenSize.y));
 }

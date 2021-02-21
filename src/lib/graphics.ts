@@ -1,7 +1,6 @@
 import { Assets } from "./assets";
 import { Sprite } from "./sprite";
-import * as Rematrix from 'rematrix';
-import { mat4 } from './gl-matrix';
+import { mat3, mat4, vec2, vec3 } from 'gl-matrix';
 import { PortalService } from "./PortalService";
 
 export const SCREEN_WIDTH = 16;
@@ -10,18 +9,18 @@ export const SCREEN_HEIGHT = 9;
 
 export class Camera {
 
-    public transform: Rematrix.Matrix3D = Rematrix.identity();
+    public readonly transform: mat3 = mat3.create();
     private angle: number = 0;
 
     constructor(public readonly ctx: CanvasRenderingContext2D) { }
 
     public resetTransform() {
-        this.transform = Rematrix.identity();
+        mat3.identity(this.transform);
         this.angle = 0;
     }
 
     public translate(dx: number, dy: number) {
-        this.transform = Rematrix.multiply(this.transform, Rematrix.translate(-dx, -dy));
+        mat3.translate(this.transform, this.transform, vec2.fromValues(-dx, -dy));
     }
 
     public getAngle() {
@@ -30,11 +29,11 @@ export class Camera {
 
     public rotate(alpha: number) {
         this.angle = alpha;
-        this.transform = Rematrix.multiply(this.transform, Rematrix.rotate(-alpha / 2 / Math.PI * 360));
+        mat3.rotate(this.transform, this.transform, -alpha);
     }
 
     public project() {
-        this.ctx.transform(this.transform[0], this.transform[1], this.transform[4], this.transform[5], this.transform[12], this.transform[13]);
+        this.ctx.transform(this.transform[0], this.transform[1], this.transform[3], this.transform[4], this.transform[6], this.transform[7]);
     }
 }
 
@@ -49,9 +48,8 @@ export class Graphics {
     public readonly gl: WebGLRenderingContext;
     private readonly el: HTMLCanvasElement;
 
-    private scalingFactor = 1;
-    private offsetX = 0;
-    private offsetY = 0;
+    private displayMatrix = mat3.create();
+
     private width = 0;
     private height = 0;
     private pixelRatio = 1;
@@ -70,8 +68,6 @@ export class Graphics {
             screenPosition: number;
         };
         uniformLocations: {
-            projectionMatrix: WebGLUniformLocation;
-            modelViewMatrix: WebGLUniformLocation;
             uSampler: WebGLUniformLocation;
             uSecondCamera: WebGLUniformLocation;
             uThirdCamera: WebGLUniformLocation;
@@ -80,6 +76,8 @@ export class Graphics {
             portal2Origin: WebGLUniformLocation;
             portal2Normal: WebGLUniformLocation;
             uScreenSize: WebGLUniformLocation;
+            uViewMatrix: WebGLUniformLocation;
+            uTime: WebGLUniformLocation;
         };
     };
     private texture: WebGLTexture;
@@ -99,8 +97,6 @@ export class Graphics {
         this.gl = gl;
         document.body.append(this.el);
         this.resizeCanvasToDisplaySize();
-        this.layout();
-        window.addEventListener('resize', () => this.layout());
 
         // Init shader program
         const vertexShader = this.loadShader(gl, gl.VERTEX_SHADER, require('./shaders/vertex.glsl').default);
@@ -126,8 +122,6 @@ export class Graphics {
                 screenPosition: gl.getAttribLocation(shaderProgram, 'aScreenPosition'),
             },
             uniformLocations: {
-                projectionMatrix: gl.getUniformLocation(shaderProgram, 'uProjectionMatrix')!,
-                modelViewMatrix: gl.getUniformLocation(shaderProgram, 'uModelViewMatrix')!,
                 uSampler: gl.getUniformLocation(shaderProgram, 'uSampler')!,
                 uSecondCamera: gl.getUniformLocation(shaderProgram, 'uSecondaryCamera')!,
                 uThirdCamera: gl.getUniformLocation(shaderProgram, 'uThirdCamera')!,
@@ -136,6 +130,8 @@ export class Graphics {
                 portal2Origin: gl.getUniformLocation(shaderProgram, 'uPortal2Origin')!,
                 portal2Normal: gl.getUniformLocation(shaderProgram, 'uPortal2Normal')!,
                 uScreenSize: gl.getUniformLocation(shaderProgram, 'uScreenSize')!,
+                uViewMatrix: gl.getUniformLocation(shaderProgram, 'uViewMatrix')!,
+                uTime: gl.getUniformLocation(shaderProgram, 'uTime')!,
             },
         };
 
@@ -228,10 +224,11 @@ export class Graphics {
     }
 
     public mapToWorldCoordinates(clientX: number, clientY: number) {
-        return [
-            ((clientX * this.pixelRatio - this.offsetX) / this.scalingFactor) - this.getMainCamera().transform[12] - SCREEN_WIDTH / 2,
-            ((clientY * this.pixelRatio - this.offsetY) / this.scalingFactor) - this.getMainCamera().transform[13] - SCREEN_HEIGHT / 2,
-        ];
+        const invertMatrx = mat3.multiply(mat3.create(), this.displayMatrix, this.getMainCamera().transform);
+        mat3.invert(invertMatrx, invertMatrx);
+        const coords = vec2.fromValues(clientX, clientY);
+        vec2.scale(coords, coords, this.pixelRatio);
+        return vec2.transformMat3(coords, coords, invertMatrx);
     }
 
     public getMainCamera(): Camera {
@@ -242,13 +239,14 @@ export class Graphics {
     }
 
     public createCamera(): OffscreenCamera {
-        console.log(this.width);
         return new OffscreenCamera(new OffscreenCanvas(this.width, this.height));
     }
 
     private i = 0;
     public draw() {
         this.resizeCanvasToDisplaySize();
+        this.render(this.getMainCamera());
+
         const gl = this.gl;
         // Set clear color to black, fully opaque
         gl.clearColor(0.0, 0.0, 0.0, 1.0);
@@ -301,22 +299,7 @@ export class Graphics {
         }
 
         // Tell WebGL to use our program when drawing
-
         gl.useProgram(this.programInfo.program);
-
-        // Set the shader uniforms
-
-        gl.uniformMatrix4fv(
-            this.programInfo.uniformLocations.projectionMatrix,
-            false,
-            projectionMatrix as any);
-        gl.uniformMatrix4fv(
-            this.programInfo.uniformLocations.modelViewMatrix,
-            false,
-            modelViewMatrix as any);
-
-        this.render(this.getMainCamera());
-
 
         gl.activeTexture(gl.TEXTURE0);
         gl.bindTexture(gl.TEXTURE_2D, this.texture);
@@ -333,25 +316,18 @@ export class Graphics {
 
         const transform = this.getMainCamera().transform;
     
-        const [normal1X, normal1Y] = PortalService.portal1Normal as any as number[];
-        const normal1XProj = (normal1X * transform[0] + normal1Y * transform[4]);
-        const normal1YProj = (normal1X * transform[1] + normal1Y * transform[5]);
-        gl.uniform2f(this.programInfo.uniformLocations.portal1Normal, normal1XProj, normal1YProj);
+        gl.uniform2f(this.programInfo.uniformLocations.portal1Normal, PortalService.portal1Normal[0], PortalService.portal1Normal[1]);
+        gl.uniform2f(this.programInfo.uniformLocations.portal1Origin, PortalService.portal1Position[0], PortalService.portal1Position[1]);
+        gl.uniform2f(this.programInfo.uniformLocations.portal2Normal, PortalService.portal2Normal[0], PortalService.portal2Normal[1]);
+        gl.uniform2f(this.programInfo.uniformLocations.portal2Origin, PortalService.portal2Position[0], PortalService.portal2Position[1]);
+        gl.uniform1f(this.programInfo.uniformLocations.uTime, Date.now() - 1613846373474);
 
-        const [portal1X, portal1Y] = PortalService.portal1Position as any as number[];
-        const portal1XProj = (portal1X * transform[0] + portal1Y * transform[4] + transform[12] + SCREEN_WIDTH / 2) * this.scalingFactor + this.offsetX;
-        const portal1YProj = (portal1X * transform[1] + portal1Y * transform[5] + transform[13] + SCREEN_HEIGHT / 2) * this.scalingFactor + this.offsetY;
-        gl.uniform2f(this.programInfo.uniformLocations.portal1Origin, portal1XProj, portal1YProj);
-    
-        const [normal2X, normal2Y] = PortalService.portal2Normal as any as number[];
-        const normal2XProj = (normal2X * transform[0] + normal2Y * transform[4]);
-        const normal2YProj = (normal2X * transform[1] + normal2Y * transform[5]);
-        gl.uniform2f(this.programInfo.uniformLocations.portal2Normal, normal2XProj, normal2YProj);
-
-        const [portal2X, portal2Y] = PortalService.portal2Position as any as number[];
-        const portal2XProj = (portal2X * transform[0] + portal2Y * transform[4] + transform[12] + SCREEN_WIDTH / 2) * this.scalingFactor + this.offsetX;
-        const portal2YProj = (portal2X * transform[1] + portal2Y * transform[5] + transform[13] + SCREEN_HEIGHT / 2) * this.scalingFactor + this.offsetY;
-        gl.uniform2f(this.programInfo.uniformLocations.portal2Origin, portal2XProj, portal2YProj);
+        const view = mat3.create();
+        mat3.mul(view, this.displayMatrix, transform);
+        if (!mat3.invert(view, view)) {
+            throw new Error('Cant inverse matrix');
+        }
+        gl.uniformMatrix3fv(this.programInfo.uniformLocations.uViewMatrix, false, view);
 
         gl.uniform2f(this.programInfo.uniformLocations.uScreenSize, this.width, this.height);
 
@@ -367,16 +343,12 @@ export class Graphics {
         camera.ctx.resetTransform();
         camera.ctx.fillStyle = '#141a20';
         camera.ctx.fillRect(0, 0, this.width, this.height);
-        camera.ctx.translate(this.offsetX, this.offsetY);
-        camera.ctx.scale(this.scalingFactor, this.scalingFactor);
 
-
-        camera.ctx.translate(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2);
-        camera.project();
+        const m = mat3.multiply(mat3.create(), this.displayMatrix, camera.transform);
+        camera.ctx.transform(m[0], m[1], m[3], m[4], m[6], m[7]);
 
         camera.ctx.strokeStyle = '#fff';
         camera.ctx.lineWidth = 0.05;
-        // camera.ctx.strokeRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
         for (const bucket of this.sprites) {
             for (const sprite of bucket) {
                 camera.ctx.save();
@@ -392,45 +364,21 @@ export class Graphics {
         this.pixelRatio = window.devicePixelRatio;
         this.width = boundingRect.width * this.pixelRatio;
         this.height = boundingRect.height * this.pixelRatio;
-        if (gl.canvas.width != this.width ||
-            gl.canvas.height != this.height) {
-                console.log('resize');
+        if (gl.canvas.width != this.width || gl.canvas.height != this.height) {
             gl.canvas.width = this.width;
             gl.canvas.height = this.height;
             gl.viewport(0, 0, this.width, this.height);
             const ratioX = this.width / SCREEN_WIDTH;
             const ratioY = this.height / SCREEN_HEIGHT;
 
+            mat3.identity(this.displayMatrix);
             if (ratioX < ratioY) {
-                this.scalingFactor = ratioX;
-                this.offsetX = 0;
-                this.offsetY = (this.height - SCREEN_HEIGHT * ratioX) / 2;
+                mat3.translate(this.displayMatrix, this.displayMatrix, vec2.fromValues(0, (this.height - SCREEN_HEIGHT * ratioX) / 2));
+                mat3.scale(this.displayMatrix, this.displayMatrix, vec2.fromValues(ratioX, ratioX));
             } else {
-                this.scalingFactor = ratioY;
-                this.offsetX = (this.width - SCREEN_WIDTH * ratioY) / 2;
-                this.offsetY = 0;
+                mat3.translate(this.displayMatrix, this.displayMatrix, vec2.fromValues((this.width - SCREEN_WIDTH * ratioY) / 2, 0));
+                mat3.scale(this.displayMatrix, this.displayMatrix, vec2.fromValues(ratioY, ratioY));
             }
         }
-    }
-
-    // TODO: Replace with above
-    private layout(): void {
-        // this.pixelRatio = window.devicePixelRatio;
-        // const canvasSize = this.el.getBoundingClientRect();
-        // this.width = this.el.width = canvasSize.width * this.pixelRatio;
-        // this.height = this.el.height = canvasSize.height * this.pixelRatio;
-
-        // const ratioX = this.width / SCREEN_WIDTH;
-        // const ratioY = this.height / SCREEN_HEIGHT;
-
-        // if (ratioX < ratioY) {
-        //     this.scalingFactor = ratioX;
-        //     this.offsetX = 0;
-        //     this.offsetY = (this.height - SCREEN_HEIGHT * ratioX) / 2;
-        // } else {
-        //     this.scalingFactor = ratioY;
-        //     this.offsetX = (this.width - SCREEN_WIDTH * ratioY) / 2;
-        //     this.offsetY = 0;
-        // }
     }
 }
