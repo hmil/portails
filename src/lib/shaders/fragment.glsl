@@ -3,6 +3,7 @@ precision lowp float;
 uniform sampler2D uSampler;
 uniform sampler2D uSecondaryCamera;
 uniform sampler2D uThirdCamera;
+uniform sampler2D uPerlinNoise;
 
 uniform mat3 uViewMatrix;
 uniform vec2 uPortal1Origin;
@@ -24,6 +25,9 @@ const vec3 portal2Color = vec3(0.96, 0.93, 0.015);
 
 vec2 rotate90(in vec2 vec) {
     return vec2(vec.y, -vec.x);
+}
+vec2 rotate270(in vec2 vec) {
+    return vec2(-vec.y, vec.x);
 }
 
 vec2 displayToWorldCoordinates(in vec2 displayCoords) {
@@ -51,51 +55,75 @@ float getPortalZ(in vec2 characterPos, in vec2 portalOrigin, in vec2 portalNorma
     vec2 characterTopEdge = normalize(portalTopEdge - characterPos);
     vec2 characterBottomEdge = normalize(portalBottomEdge - characterPos);
 
-    float sideLimitTop = dot(rotate90(normalize(characterFragment)), characterTopEdge);
-    float sideLimitBottom = dot(rotate90(characterBottomEdge), normalize(characterFragment));
-    float sideLimit = dot(normalize(characterFragment), characterTopEdge) > dot(characterBottomEdge, normalize(characterFragment)) ? sideLimitTop : sideLimitBottom;
+    float distanceToSide = clamp(1.0 * min(dot(characterFragment, rotate90(characterTopEdge)), dot(characterFragment, rotate270(characterBottomEdge)))
+        + clamp(0.75 - dot(-characterPortal, portalNormal) / 4.0));
 
-    float sharpness = length(characterPortal) * 10.0 + 1.5;
-
-    // Block when:
-    // - direction of portalNormal, and...
-    // - (fragment closer than expansion, or character further than expansion)
-    float nearWall = (dot(portalNormal, portalFragment) < 0.0 && (
-            length(portalFragment) < expansion ||
-            length(characterPortal) > expansion
-        )) ? 0.0 : 1.0;
-    
-    float farWall = clamp((8.0 / length(characterPortal)/* * -dot(normalize(characterPortal), portalNormal)*/ - length(characterFragment) / 2.0) / 2.0);
-    
-    return (1.0 - clamp(sideLimit * sharpness + 0.5)) * farWall * nearWall;
+    float nearWall = clamp(clamp(dot(portalNormal, portalFragment) * 100.0) + clamp(length(portalFragment) - length(characterPortal)));
+    float farWall = clamp(4.0 - 1.0 * length(characterPortal) - length(portalFragment) / 4.0);
+    return farWall * nearWall * distanceToSide;
 }
 
 vec4 getPortalSample(in float deltaHeight, in vec2 characterPortal, in vec2 portalNormal, in sampler2D camera, in vec3 portalColor, in vec3 otherPortalColor) {
-    const float gain = 4.0;
-    float gainOpposite = length(-exp(-dot(characterPortal, portalNormal) * 4.0)) + 4.0;
-
-    float correctHeight = clamp(deltaHeight * 100.0);
-
+    float gain = 4.0 * (length(characterPortal) + 1.0);
     vec3 theTint = mix(otherPortalColor, portalColor, clamp(length(characterPortal) / 3.0 + 0.5));
-    vec3 color = mix(theTint, vec3(texture2D(camera, vUv)), clamp(deltaHeight * gain));
-
-    vec3 oppositeFade = mix(theTint, color, correctHeight);
-
-    return vec4(mix(vec3(texture2D(uSampler, vUv)), oppositeFade, clamp((deltaHeight + 1.0 / gainOpposite) * gainOpposite)), 1.0);
+    vec3 color = mix(theTint, vec3(texture2D(camera, vUv)), clamp(10.0 * deltaHeight * gain - 9.0));
+    vec3 colorOpposite = mix(theTint, vec3(texture2D(camera, vUv)), clamp(deltaHeight * gain));
+    vec3 colorComposite = mix(colorOpposite, color, clamp(length(characterPortal)));
+    return mix(texture2D(uSampler, vUv), vec4(colorComposite, 1.0), clamp(deltaHeight * gain));
 }
 
-float getGroundHeight() {
-    return (sin(vWorldCoord.x * 15.0 + uTime / 200.0) / 2.0 + cos(vWorldCoord.y * 15.0) / 2.0) / 4.0 + 0.5;
+float easing(float value) {
+    // 6*Math.pow(t,5) - 15*Math.pow(t,4) + 10*Math.pow(t,3)
+    float p3 = value*value*value;
+    float p4 = p3 * value;
+    float p5 = p4 * value;
+    return 6.0 * p5 - 15.0 * p4 + 10.0 * p3;
+}
+
+float getGroundHeight(vec2 characterPos) {
+    vec3 noiseCoords = vec3((vWorldCoord - characterPos) * 1.6, uTime / 1024.0);
+    vec3 minXYZ = floor(noiseCoords);
+    vec3 topLeft =      vec3(texture2D(uPerlinNoise, mod(vec2(minXYZ) + vec2(mod(minXYZ.z, 4.0), mod(minXYZ.z / 4.0, 4.0)), 16.0)/ 16.0)) * 2.0 - 1.0;
+    vec3 topRight =     vec3(texture2D(uPerlinNoise, mod(vec2(minXYZ) + vec2(mod(minXYZ.z, 4.0), mod(minXYZ.z / 4.0, 4.0)) + vec2(1.0, 0.0), 16.0)/ 16.0)) * 2.0 - 1.0;
+    vec3 bottomLeft =   vec3(texture2D(uPerlinNoise, mod(vec2(minXYZ) + vec2(mod(minXYZ.z, 4.0), mod(minXYZ.z / 4.0, 4.0)) + vec2(0.0, 1.0), 16.0)/ 16.0)) * 2.0 - 1.0;
+    vec3 bottomRight =  vec3(texture2D(uPerlinNoise, mod(vec2(minXYZ) + vec2(mod(minXYZ.z, 4.0), mod(minXYZ.z / 4.0, 4.0)) + vec2(1.0, 1.0), 16.0)/ 16.0)) * 2.0 - 1.0;
+    vec3 topLeftB =     vec3(texture2D(uPerlinNoise, mod(vec2(minXYZ) + vec2(mod(minXYZ.z + 1.0, 4.0), mod((minXYZ.z + 1.0) / 4.0, 4.0)), 16.0)/ 16.0)) * 2.0 - 1.0;
+    vec3 topRightB =    vec3(texture2D(uPerlinNoise, mod(vec2(minXYZ) + vec2(mod(minXYZ.z + 1.0, 4.0), mod((minXYZ.z + 1.0) / 4.0, 4.0)) + vec2(1.0, 0.0), 16.0)/ 16.0)) * 2.0 - 1.0;
+    vec3 bottomLeftB =  vec3(texture2D(uPerlinNoise, mod(vec2(minXYZ) + vec2(mod(minXYZ.z + 1.0, 4.0), mod((minXYZ.z + 1.0) / 4.0, 4.0)) + vec2(0.0, 1.0), 16.0)/ 16.0)) * 2.0 - 1.0;
+    vec3 bottomRightB = vec3(texture2D(uPerlinNoise, mod(vec2(minXYZ) + vec2(mod(minXYZ.z + 1.0, 4.0), mod((minXYZ.z + 1.0) / 4.0, 4.0)) + vec2(1.0, 1.0), 16.0)/ 16.0)) * 2.0 - 1.0;
+
+    float s = dot(topLeft, noiseCoords - minXYZ);
+    float t = dot(topRight, noiseCoords - minXYZ - vec3(1.0, 0.0, 0.0));
+    float u = dot(bottomLeft, noiseCoords - minXYZ - vec3(0.0, 1.0, 0.0));
+    float v = dot(bottomRight, noiseCoords - minXYZ - vec3(1.0, 1.0, 0.0));
+    float w = dot(topLeftB, noiseCoords - minXYZ - vec3(0.0, 0.0, 1.0));
+    float x = dot(topRightB, noiseCoords - minXYZ - vec3(1.0, 0.0, 1.0));
+    float y = dot(bottomLeftB, noiseCoords - minXYZ - vec3(0.0, 1.0, 1.0));
+    float z = dot(bottomRightB, noiseCoords - minXYZ - vec3(1.0, 1.0, 1.0));
+
+    float sx = easing(noiseCoords.x - minXYZ.x);
+    float sy = easing(noiseCoords.y - minXYZ.y);
+    float sz = easing(noiseCoords.z - minXYZ.z);
+
+    float a = s + sx * (t - s);
+    float b = u + sx * (v - u);
+    float c = w + sx * (x - w);
+    float d = y + sx * (z - y);
+
+    float front = a + sy * (b - a);
+    float back = c + sy * (d - c);
+
+    float noise = front + sz * (back - front);
+
+    return noise * 0.4 + 0.5; // (sin(vWorldCoord.x * 15.0 + uTime / 200.0) / 2.0 + cos(vWorldCoord.y * 15.0) / 2.0) / 4.0 + 0.5;
 }
 
 void main() {
     vec2 characterPos = displayToWorldCoordinates(uScreenSize / 2.0);
-    // vec4 color1 = getPortalSample(characterPos, uPortal1Origin, uPortal1Normal, portal1Color, portal2Color, uSecondaryCamera);
-    // vec4 color2 = getPortalSample(characterPos, uPortal2Origin, uPortal2Normal, portal2Color, portal1Color, uThirdCamera);
     float height1 = getPortalZ(characterPos, uPortal1Origin, uPortal1Normal);
     float height2 = getPortalZ(characterPos, uPortal2Origin, uPortal2Normal);
 
-    // Shortcuts, avoid useless texture lookups
+    // Shortcuts, avoid useless texture lookups and noise computations
     if (height1 == 0.0 && height2 == 0.0) {
         gl_FragColor = texture2D(uSampler, vUv);
     } else if (height1 == 1.0) {
@@ -103,8 +131,8 @@ void main() {
     } else if (height2 == 1.0) {
         gl_FragColor = texture2D(uThirdCamera, vUv);
     } else if (height1 > height2) {
-        gl_FragColor = getPortalSample(height1 - getGroundHeight(), uPortal1Origin - characterPos, uPortal1Normal, uSecondaryCamera, portal1Color, portal2Color);
+        gl_FragColor = getPortalSample(height1 - getGroundHeight(characterPos), uPortal1Origin - characterPos, uPortal1Normal, uSecondaryCamera, portal1Color, portal2Color);
     } else {
-        gl_FragColor = getPortalSample(height2 - 1.0 + getGroundHeight(), uPortal2Origin - characterPos, uPortal2Normal, uThirdCamera, portal2Color, portal1Color);
+        gl_FragColor = getPortalSample(height2 - 1.0 + getGroundHeight(characterPos), uPortal2Origin - characterPos, uPortal2Normal, uThirdCamera, portal2Color, portal1Color);
     }
 }

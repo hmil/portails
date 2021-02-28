@@ -1,3 +1,4 @@
+import { Box } from 'lib/objects/box';
 import { GameObject } from 'lib/objects/game-object';
 import { Wall } from 'lib/objects/wall';
 
@@ -30,5 +31,7 @@ export class Level1 extends GameObject {
 
         this.createObject(Wall, [12, 13, 1, 1, Math.PI/4]);
         this.createObject(Wall, [15, 12, 1, 1, 2*Math.PI/6]);
+
+        this.createObject(Box, [12.1, 8]);
     }
 }

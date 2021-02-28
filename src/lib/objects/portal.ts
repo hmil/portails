@@ -1,9 +1,11 @@
 import { mat3, vec2 } from "gl-matrix";
+import { GameEvent } from "lib/events";
 import { Camera, SCREEN_HEIGHT, SCREEN_WIDTH } from "lib/graphics";
 import { PortalService } from "lib/PortalService";
+import { Sprite } from "lib/sprite";
 import * as planck from "planck-js";
 import { Transform, Vec2 } from "planck-js";
-import { GameObject, Portalizable } from "./game-object";
+import { GameObject } from "./game-object";
 
 const WIDTH = 0.2;
 const HEIGHT = 2;
@@ -14,11 +16,21 @@ export interface IPortal {
     normal: Vec2;
 }
 
-interface PortalData {
-    teleportArray: Array<{ body: planck.Body, nextPos: Vec2, nextSpeed: Vec2, nextAngle: number}>
+
+export interface Portalizable {
+    surrogate: {
+        sprite: Sprite;
+        body: planck.Body;
+        active: number;
+    }
+    onPortal?: () => void;
 }
 
-export class Portal extends GameObject<PortalData> {
+export function isPortalizable(p: unknown): p is Portalizable {
+    return typeof p === 'object' && p != null && 'surrogate' in p;
+}
+
+export class Portal extends GameObject<void> {
 
     public body?: planck.Body;
 
@@ -27,42 +39,35 @@ export class Portal extends GameObject<PortalData> {
 
     readonly zIndex = 1;
 
-    private teleportArray: Array<{ body: planck.Body, nextPos: Vec2, nextSpeed: Vec2, nextAngle: number}> = [];
-
-    private portalingFixtures = new Map<planck.Fixture, IPortal>();
+    private portalingBodies = new Map<planck.Body, IPortal>();
 
     private isDrawing = false;
 
-    init({teleportArray}: PortalData) {
-        this.graphics.addSprite(this);
-        this.teleportArray = teleportArray;
+    init() {
+        this.context.graphics.addSprite(this);
 
-        this.world.on('begin-contact', (contact) => {
+        this.context.physics.world.on('begin-contact', (contact) => {
             if (contact.getFixtureA().getUserData() === 'portal' && contact.getFixtureA().getBody() === this.portal1?.body) {
-                this.portalingFixtures.set(contact.getFixtureB(), this.portal1);
+                this.startPortal(contact.getFixtureB().getBody(), this.portal1);
             } else if (contact.getFixtureA().getUserData() === 'portal' && contact.getFixtureA().getBody() === this.portal2?.body) {
-                this.portalingFixtures.set(contact.getFixtureB(), this.portal2);
+                this.startPortal(contact.getFixtureB().getBody(), this.portal2);
             } else if (contact.getFixtureB().getUserData() === 'portal' && contact.getFixtureB().getBody() === this.portal1?.body) {
-                this.portalingFixtures.set(contact.getFixtureA(), this.portal1);
+                this.startPortal(contact.getFixtureA().getBody(), this.portal1);
             } else if (contact.getFixtureB().getUserData() === 'portal' && contact.getFixtureB().getBody() === this.portal2?.body) {
-                this.portalingFixtures.set(contact.getFixtureA(), this.portal2);
+                this.startPortal(contact.getFixtureA().getBody(), this.portal2);
             } 
         });
-        this.world.on('end-contact', (contact) => {
+        this.context.physics.world.on('end-contact', (contact) => {
             if (contact.getFixtureA().getUserData() === 'portal' && 
                 (contact.getFixtureA().getBody() === this.portal1?.body || contact.getFixtureA().getBody() === this.portal2?.body)) {
-                console.log('remove B');
-                (contact.getFixtureB().getBody().getUserData() as Portalizable).surrogate.active = false;
-                this.portalingFixtures.delete(contact.getFixtureB());
+                this.stopPortal(contact.getFixtureB().getBody());
             } else if (contact.getFixtureB().getUserData() === 'portal' && 
-            (contact.getFixtureB().getBody() === this.portal1?.body || contact.getFixtureB().getBody() === this.portal2?.body)) {
-                console.log('remove A');
-                (contact.getFixtureA().getBody().getUserData() as Portalizable).surrogate.active = false;
-                this.portalingFixtures.delete(contact.getFixtureA());
+                        (contact.getFixtureB().getBody() === this.portal1?.body || contact.getFixtureB().getBody() === this.portal2?.body)) {
+                this.stopPortal(contact.getFixtureA().getBody());
             } 
         });
 
-        this.world.on('pre-solve', (contact, oldManifold) => {
+        this.context.physics.world.on('pre-solve', (contact, oldManifold) => {
             const contactPoints = contact.getWorldManifold(null)?.points;
             if (contactPoints == null) {
                 return;
@@ -86,46 +91,74 @@ export class Portal extends GameObject<PortalData> {
             }
         });
 
-        requestAnimationFrame(this.update);
+        this.on('after-physics', this.update);
+    }
+
+    private stopPortal(body: planck.Body) {
+        const userData = body.getUserData();
+        if (isPortalizable(userData)) {
+            userData.surrogate.active--;
+            this.portalingBodies.delete(body);
+        }
+    }
+
+    private startPortal(body: planck.Body, portal: IPortal) {
+        const userData = body.getUserData();
+        if (isPortalizable(userData)) {
+            this.portalingBodies.set(body, portal);
+            userData.surrogate.active++;
+        }
     }
 
     private update = () => {
-        for (const [fixture, portal] of this.portalingFixtures) {
+        for (const [body, portal] of this.portalingBodies) {
             const otherPortal = (this.portal1 === portal) ? this.portal2 : this.portal1;
             if (otherPortal == null) {
                 return;
             }
-            const surrogate = (fixture.getBody().getUserData() as Portalizable).surrogate;
-            if (!surrogate.active) {
-                console.log('adding sprite');
-                this.graphics.addSprite(surrogate.sprite);
-                surrogate.active = true;
-            }
+            const surrogate = (body.getUserData() as Portalizable).surrogate;
+
+            const shouldMirror = PortalService.isMirror;
+
             const portalTangent = Vec2(-portal.normal.y, portal.normal.x);
-            const bodyPos = fixture.getBody().getPosition();
+            const bodyPos = body.getPosition();
             const relativeBodyPos = bodyPos.clone().sub(portal.body.getPosition().clone());
             const primaryDisplacement = this.dot(relativeBodyPos, portal.normal);
-            const tangentDisplacement = this.dot(relativeBodyPos, portalTangent);
-            const primaryVelocity = this.dot(fixture.getBody().getLinearVelocity(), portal.normal);
-            const tangentVelocity = this.dot(fixture.getBody().getLinearVelocity(), portalTangent);
+            const tangentDisplacement = this.dot(relativeBodyPos, portalTangent) * (shouldMirror ? -1 : 1);
+            const primaryVelocity = this.dot(body.getLinearVelocity(), portal.normal);
+            const tangentVelocity = this.dot(body.getLinearVelocity(), portalTangent) * (shouldMirror ? -1.0 : 1.0);
 
-            const angle = (otherPortal.body.getAngle() - portal.body.getAngle() + Math.PI) % (2 * Math.PI);
+            const srcNormal = vec2.fromValues(-portal.normal.x, -portal.normal.y);
+            const dstNormal = vec2.fromValues(otherPortal.normal.x, otherPortal.normal.y);
+            if (shouldMirror) {
+                vec2.mul(dstNormal, dstNormal, vec2.fromValues(-1, 1));
+            }
+            const angle = shouldMirror ? Math.atan2(srcNormal[1], srcNormal[0]) - Math.atan2(dstNormal[1], dstNormal[0]) :
+            Math.atan2(dstNormal[1], dstNormal[0]) - Math.atan2(srcNormal[1], srcNormal[0]);
 
             const otherTangent = Vec2(-otherPortal.normal.y, otherPortal.normal.x);
             const nextPos = otherPortal.normal.clone().mul(-primaryDisplacement).add(otherTangent.mul(-tangentDisplacement)).add(otherPortal.body.getPosition().clone());
-            const nextAngle = angle + fixture.getBody().getAngle();
+            const nextAngle = (angle + body.getAngle() * (shouldMirror ? -1 : 1)) % (2 * Math.PI);
             const nextSpeed = otherPortal.normal.clone().mul(-primaryVelocity).add(otherTangent.clone().mul(tangentVelocity));
             if (primaryDisplacement < 0) {
-                this.teleportArray.push({body: fixture.getBody(), nextPos, nextSpeed, nextAngle });
+                surrogate.active++;
+                (body.getUserData() as Portalizable).onPortal?.();
+                this.teleportBody(surrogate.body, body.getPosition().clone(), body.getLinearVelocity().clone(), body.getAngle());
+                this.teleportBody(body, nextPos, nextSpeed, nextAngle);
             } else {
-                this.teleportArray.push({ body: surrogate.body, nextPos, nextSpeed, nextAngle});
+                this.teleportBody(surrogate.body, nextPos, nextSpeed, nextAngle);
             }
         }
-        requestAnimationFrame(this.update);
+    }
+
+    private teleportBody(body: planck.Body, position: planck.Vec2, velocity: planck.Vec2, angle: number) {
+        body.setPosition(position);
+        body.setLinearVelocity(velocity)
+        body.setAngle(angle);
     }
 
     private createPortal(): IPortal {
-        const body = this.world.createBody({
+        const body = this.context.physics.world.createBody({
             type: 'static',
         });
         // Main sensor
@@ -162,7 +195,7 @@ export class Portal extends GameObject<PortalData> {
         vec2.set(PortalService.portal1Position, position.x, position.y);
         vec2.set(PortalService.portal1Normal, Math.cos(angle), Math.sin(angle));
     }
-    
+
     setPortal2(position: Vec2, angle: number) {
         if (!this.portal2) {
             this.portal2 = this.createPortal();
@@ -184,8 +217,8 @@ export class Portal extends GameObject<PortalData> {
         
         if (!this.isDrawing && this.portal1 && this.portal2) {
             this.isDrawing = true;
-            this.renderPortalPerspective(this.graphics.secondaryCamera, this.portal2, this.portal1);
-            this.renderPortalPerspective(this.graphics.thirdCamera, this.portal1, this.portal2);
+            this.renderPortalPerspective(this.context.graphics.secondaryCamera, this.portal2, this.portal1);
+            this.renderPortalPerspective(this.context.graphics.thirdCamera, this.portal1, this.portal2);
             // ctx.save();
             // ctx.resetTransform();
             // ctx.globalAlpha = 0.5;
@@ -195,14 +228,39 @@ export class Portal extends GameObject<PortalData> {
         }
     }
 
-    private renderPortalPerspective(camera: Camera, p1: IPortal, p2: IPortal) {
-        const angle = (p1.body.getAngle() - p2.body.getAngle() + Math.PI) % (2 * Math.PI);
+    private renderPortalPerspective(camera: Camera, dstPortal: IPortal, srcPortal: IPortal) {
+
+        const srcNormal = vec2.fromValues(-srcPortal.normal.x, -srcPortal.normal.y);
+        const dstNormal = vec2.fromValues(dstPortal.normal.x, dstPortal.normal.y);
+        if (PortalService.isMirror) {
+            vec2.mul(dstNormal, dstNormal, vec2.fromValues(-1, 1));
+        }
+        const angle = Math.atan2(srcNormal[1], srcNormal[0]) - Math.atan2(dstNormal[1], dstNormal[0]);
+
+
+        // let angle1 = dstPortal.body.getAngle();
+        // let angle2 = srcPortal.body.getAngle();
+
+        // if (PortalService.isMirror) {
+        //     let vAngle1 = vec2.fromValues(Math.cos(angle1), Math.sin(angle1));
+        //     let vAngle2 = vec2.fromValues(Math.cos(angle2), Math.sin(angle2));
+        //     let vTemp = vec2.fromValues(vAngle1[0], vAngle1[1]);
+        //     angle1 = vec2.angle(vTemp, vec2.fromValues(1, 0));
+        //     vTemp = vec2.fromValues(-vAngle2[0], vAngle2[1]);
+        //     angle2 = vec2.angle(vTemp, vec2.fromValues(1, 0));
+        // }
+        
+        // // const angle = (PortalService.isMirror ? (angle1 - angle2 + 2 * Math.PI) : (angle1 - angle2 + Math.PI)) % (2 * Math.PI);
+        // const angle = (PortalService.isMirror ? (angle1 - angle2 + Math.PI) : (angle1 - angle2 + Math.PI)) % (2 * Math.PI);
         camera.resetTransform();
-        mat3.copy(camera.transform, this.graphics.getMainCamera().transform);
-        camera.translate(-p2.body.getPosition().x, -p2.body.getPosition().y);
+        mat3.copy(camera.transform, this.context.graphics.getMainCamera().transform);
+        camera.translate(srcPortal.body.getPosition().x, srcPortal.body.getPosition().y);
         camera.rotate(angle);
-        camera.translate(p1.body.getPosition().x, p1.body.getPosition().y);
-        this.graphics.render(camera);
+        if (PortalService.isMirror) {
+            mat3.scale(camera.transform, camera.transform, vec2.fromValues(-1.0, 1.0));
+        }
+        camera.translate(-dstPortal.body.getPosition().x, -dstPortal.body.getPosition().y);
+        this.context.graphics.render(camera);
     }
 
     private drawPortal(ctx: CanvasRenderingContext2D, portal: IPortal, color: string) {

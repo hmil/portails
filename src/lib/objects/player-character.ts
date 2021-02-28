@@ -1,10 +1,12 @@
+import { mat3, vec2 } from 'gl-matrix';
 import { Assets } from 'lib/assets';
 import { SCREEN_HEIGHT, SCREEN_WIDTH } from 'lib/graphics';
+import { PortalService } from 'lib/PortalService';
 import * as planck from 'planck-js';
 import { Vec2 } from 'planck-js';
 
-import { GameObject, Portalizable } from './game-object';
-import { Portal } from './portal';
+import { GameObject } from './game-object';
+import { Portal, Portalizable } from './portal';
 
 // const RADIUS = 50;
 
@@ -12,8 +14,6 @@ const HEIGHT = 1.6;
 const WIDTH = 0.8;
 
 export class PlayerCharacter extends GameObject implements Portalizable {
-    
-    private toTeleport: Array<{ body: planck.Body, nextPos: Vec2, nextSpeed: Vec2, nextAngle: number}> = [];
 
     private keys = {
         up: 0,
@@ -26,23 +26,25 @@ export class PlayerCharacter extends GameObject implements Portalizable {
 
     readonly zIndex = 2;
 
+    private mirror = false;
+
     private direction: 'left' | 'right' = 'left';
 
-    private portal = this.createObject(Portal, { teleportArray: this.toTeleport });
+    private portal = this.createObject(Portal, undefined);
 
     surrogate = {
         sprite: {
             zIndex: 2,
             draw: (ctx: CanvasRenderingContext2D, assets: Assets) => {
-                if (!this.surrogate.active) {
+                if (!this.surrogate.canDraw) {
                     return;
                 }
-                this.drawCharacter(ctx, assets, this.surrogate.body.getPosition(), this.surrogate.body.getAngle());
+                this.drawCharacter(ctx, assets, this.surrogate.body.getPosition(), this.surrogate.body.getAngle(), (this.mirror ? !PortalService.isMirror : PortalService.isMirror) ? this.direction === 'right' : this.direction === 'left');
             }
         },
         body: (() => {
-            const body = this.world.createBody({
-                type: 'dynamic',
+            const body = this.context.physics.world.createBody({
+                type: 'static',
                 position: planck.Vec2(4, 14),
                 allowSleep: false,
                 angle: 0,
@@ -56,32 +58,48 @@ export class PlayerCharacter extends GameObject implements Portalizable {
             // });
             return body;
         })(),
-        active: false
+        active: 0,
+        canDraw: true
     }
 
     init() {
         this.createBody();
-        this.graphics.addSprite(this);
+        this.context.graphics.addSprite(this);
+        this.context.graphics.addSprite(this.surrogate.sprite);
 
         window.addEventListener('keydown', this.onKeydown);
         window.addEventListener('keyup', this.onKeyUp);
         window.addEventListener('mousemove', this.onMouseMove);
         window.addEventListener('mousedown', this.onMouseDown);
 
-        requestAnimationFrame(this.update);
+        this.on('before-physics', this.update);
+        this.on('before-render', this.trackView);
     }
 
-    public update = () => {
+    public onPortal() {
+        this.mirror = PortalService.isMirror ? !this.mirror : this.mirror;
+    }
+
+    private trackView = () => {
         if (this.body == null) {
             return;
         }
 
-        for (let i = 0 ; i < this.toTeleport.length ; i++) {
-            const { body, nextPos, nextSpeed, nextAngle } = this.toTeleport[i];
-            body.setPosition(nextPos);
-            body.setLinearVelocity(nextSpeed)
-            body.setAngle(nextAngle);
+        const camera = this.context.graphics.getMainCamera();
+        camera.resetTransform();
+        camera.translate(SCREEN_WIDTH/2, SCREEN_HEIGHT/2);
+        if (this.mirror) {
+            mat3.scale(camera.transform, camera.transform, vec2.fromValues(-1, 1));
         }
+        camera.rotate(-this.body.getAngle());
+        camera.translate(-this.body.getPosition().x, -this.body.getPosition().y);
+    }
+
+    private update = () => {
+        if (this.body == null) {
+            return;
+        }
+
 
         const playerAngle = this.body.getAngle();
         if (playerAngle != 0) {
@@ -91,31 +109,21 @@ export class PlayerCharacter extends GameObject implements Portalizable {
                 this.body.setAngle(this.body.getAngle() - 0.05 * Math.sign(this.body.getAngle()));
             }
         }
-        // this.body.setAngle(1);
-        this.toTeleport.length = 0;
         const direction = this.keys.right - this.keys.left;
         if (this.isPlayerTouchingTheGround(this.body)) {
             const v = this.body?.getLinearVelocity();
-            const force = planck.Vec2(-v.x * 1, -this.keys.up * 500); // Breaking force + jump
+            const force = planck.Vec2(-v.x * 1, (this.keys.down - this.keys.up) * 550); // Breaking force + jump
             
             if (direction != 0) {
-                force.x += direction * 30; // Moving force
+                force.x += (direction * 30) * (this.mirror ? -1 : 1); // Moving force
             }
             
             this.body.applyForce(force, this.body.getPosition(), true);
-            // Body.applyForce(this.body, this.body.position, force);
         }
 
         if (direction != 0) {
             this.setDirection(direction > 0 ? 'right' : 'left');
         }
-
-        const camera = this.graphics.getMainCamera();
-        camera.resetTransform();
-        camera.translate(-SCREEN_WIDTH/2, -SCREEN_HEIGHT/2);
-        camera.rotate(this.body.getAngle());
-        camera.translate(this.body.getPosition().x, this.body.getPosition().y);
-        requestAnimationFrame(this.update);
     }
 
     private isPlayerTouchingTheGround(body: planck.Body) {
@@ -134,9 +142,9 @@ export class PlayerCharacter extends GameObject implements Portalizable {
     }
 
     private createBody(): planck.Body {
-        this.body = this.world.createBody({
+        this.body = this.context.physics.world.createBody({
             type: 'dynamic',
-            position: planck.Vec2(5, 15),
+            position: planck.Vec2(14, 15),
             allowSleep: false,
             angle: 0,
             fixedRotation: true,
@@ -171,16 +179,16 @@ export class PlayerCharacter extends GameObject implements Portalizable {
         if (this.body == null) {
             return;
         }
-        this.drawCharacter(ctx, assets, this.body.getPosition(), this.body.getAngle());
+        this.drawCharacter(ctx, assets, this.body.getPosition(), this.body.getAngle(), this.mirror ? this.direction === 'right' : this.direction === 'left');
     }
 
-    private drawCharacter(ctx: CanvasRenderingContext2D, assets: Assets, position: Vec2, angle: number) {
+    private drawCharacter(ctx: CanvasRenderingContext2D, assets: Assets, position: Vec2, angle: number, mirror: boolean) {
         ctx.strokeStyle = '#f00';
         ctx.fillStyle = '#fff';
         ctx.translate(position.x, position.y);
         ctx.rotate(angle);
 
-        if (this.direction === 'left') {
+        if (mirror) {
             ctx.scale(-1, 1);
         }
         assets.character.draw(ctx, -WIDTH / 2, -HEIGHT / 2, WIDTH, HEIGHT);
@@ -202,7 +210,7 @@ export class PlayerCharacter extends GameObject implements Portalizable {
             return;
         }
 
-        const [x, y] = this.graphics.mapToWorldCoordinates(evt.clientX, evt.clientY);
+        const [x, y] = this.context.graphics.mapToWorldCoordinates(evt.clientX, evt.clientY);
 
         const playerPos = this.body.getPosition();
 
@@ -212,7 +220,7 @@ export class PlayerCharacter extends GameObject implements Portalizable {
         const end = playerPos.clone().add(direction.mul(100));
 
         let f = 1;
-        this.world.rayCast(start, end, (fixture, point, normal, fraction) => {
+        this.context.physics.world.rayCast(start, end, (fixture, point, normal, fraction) => {
             if (fraction < f && fixture.getUserData() !== 'portal-gate' && fixture.getUserData() !== 'portal') {
                 const position = Vec2(point.x, point.y);
                 console.log(normal);

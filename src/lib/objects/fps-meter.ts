@@ -17,13 +17,14 @@ export class FpsMeter extends GameObject implements Sprite {
     zIndex = 4;
 
     init() {
-        this.graphics.addSprite(this);
-        requestAnimationFrame(this.update);
+        this.context.graphics.addSprite(this);
+        this.on('before-physics', () => {
+            this.update(performance.now());
+        });
     }
 
     update = (time: number) => {
         this.delta = (this.delta * 9 + time - this.lastTime) / 10;
         this.lastTime = time;
-        requestAnimationFrame(this.update);
     }
 }

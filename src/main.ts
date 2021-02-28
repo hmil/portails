@@ -1,10 +1,12 @@
 import { AssetsLibrary } from 'lib/assets';
 import { AssetsLoader } from 'lib/assets-loader';
-import { Controller } from 'lib/controller';
+import { Context } from 'lib/context';
+import { EventBus } from 'lib/events';
 import { GameLoop } from 'lib/game-loop';
 import { Graphics } from 'lib/graphics';
 import { Level1 } from 'lib/levels/level1';
 import { FpsMeter } from 'lib/objects/fps-meter';
+import { PlayerCharacter } from 'lib/objects/player-character';
 import { Physics } from 'lib/physics';
 
 async function main() {
@@ -14,10 +16,13 @@ async function main() {
 
     const graphics = new Graphics(assets);
     const physics = new Physics();
-    const controller = new Controller(physics, graphics);
-    const gameLoop = new GameLoop(physics, graphics, controller);
-
-    const level = new Level1(physics.world, graphics);
+    const events = new EventBus();
+    const context = new Context(physics, graphics, events);
+    const gameLoop = new GameLoop(context);
+    
+    const player = new PlayerCharacter(context);
+    player.init();
+    const level = new Level1(context);
     level.init();
     level.createObject(FpsMeter, undefined);
 

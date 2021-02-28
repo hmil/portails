@@ -6,6 +6,7 @@ import { PortalService } from "./PortalService";
 export const SCREEN_WIDTH = 16;
 export const SCREEN_HEIGHT = 9;
 
+const PERLIN_SIZE = 64;
 
 export class Camera {
 
@@ -20,7 +21,7 @@ export class Camera {
     }
 
     public translate(dx: number, dy: number) {
-        mat3.translate(this.transform, this.transform, vec2.fromValues(-dx, -dy));
+        mat3.translate(this.transform, this.transform, vec2.fromValues(dx, dy));
     }
 
     public getAngle() {
@@ -29,7 +30,7 @@ export class Camera {
 
     public rotate(alpha: number) {
         this.angle = alpha;
-        mat3.rotate(this.transform, this.transform, -alpha);
+        mat3.rotate(this.transform, this.transform, alpha);
     }
 
     public project() {
@@ -38,8 +39,8 @@ export class Camera {
 }
 
 export class OffscreenCamera extends Camera {
-    constructor(public readonly canvas: OffscreenCanvas) {
-        super(canvas.getContext('2d') as any);
+    constructor(public readonly canvas: CanvasRenderingContext2D) {
+        super(canvas);
     }
 }
 
@@ -78,18 +79,21 @@ export class Graphics {
             uScreenSize: WebGLUniformLocation;
             uViewMatrix: WebGLUniformLocation;
             uTime: WebGLUniformLocation;
+            uPerlinNoise: WebGLUniformLocation;
         };
     };
     private texture: WebGLTexture;
     private texture2: WebGLTexture;
     private texture3: WebGLTexture;
-    // private frameBuffer: ImageData;
+    private perlinTexture: WebGLTexture;
+
+    private perlinNoise: Uint32Array = this.createPerlinNoise();
 
     constructor(private readonly assets: Assets) {
         this.el = document.createElement('canvas');
         this.el.addEventListener('contextmenu', event => event.preventDefault());
-        this.el.style.width = '100%';
-        this.el.style.height = '100%';
+        // this.el.style.width = '100%';
+        // this.el.style.height = '100%';
         const gl = this.el.getContext('webgl');
         if (gl == null) {
             throw new Error('Canvas not supported in this browser');
@@ -132,6 +136,7 @@ export class Graphics {
                 uScreenSize: gl.getUniformLocation(shaderProgram, 'uScreenSize')!,
                 uViewMatrix: gl.getUniformLocation(shaderProgram, 'uViewMatrix')!,
                 uTime: gl.getUniformLocation(shaderProgram, 'uTime')!,
+                uPerlinNoise: gl.getUniformLocation(shaderProgram, 'uPerlinNoise')!,
             },
         };
 
@@ -183,6 +188,24 @@ export class Graphics {
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+
+        this.perlinTexture = gl.createTexture()!;
+        gl.bindTexture(gl.TEXTURE_2D, this.perlinTexture);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, PERLIN_SIZE, PERLIN_SIZE, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array(this.perlinNoise.buffer));
+    }
+
+    private createPerlinNoise(): Uint32Array {
+        const v = vec3.create();
+        const buffer = new Uint32Array(PERLIN_SIZE * PERLIN_SIZE);
+        for (let i = 0 ; i < PERLIN_SIZE * PERLIN_SIZE ; i++) {
+            vec3.random(v);
+            buffer[i] = (((v[0] * 128 + 128) & 0xff) << 0) + (((v[1] * 128 + 128) & 0xff) << 8) + (((v[2] * 128 + 128) & 0xff) << 16);
+        }
+        return buffer;
     }
 
     private loadShader(gl: WebGLRenderingContext, type: number, source: string) {
@@ -239,7 +262,20 @@ export class Graphics {
     }
 
     public createCamera(): OffscreenCamera {
-        return new OffscreenCamera(new OffscreenCanvas(this.width, this.height));
+        return new OffscreenCamera(this.createOffscreenCanvas());
+    }
+
+    private createOffscreenCanvas() {
+        // Experimental API, not yet available
+        // const canvas = new OffscreenCanvas(this.width, this.height)
+        const canvas = document.createElement('canvas');
+        canvas.width = this.width;
+        canvas.height = this.height;
+        const ctx = canvas.getContext('2d');
+        if (ctx == null) {
+            throw new Error('Cannot initialize canvas');
+        }
+        return ctx;
     }
 
     private i = 0;
@@ -322,6 +358,11 @@ export class Graphics {
         gl.uniform2f(this.programInfo.uniformLocations.portal2Origin, PortalService.portal2Position[0], PortalService.portal2Position[1]);
         gl.uniform1f(this.programInfo.uniformLocations.uTime, Date.now() - 1613846373474);
 
+        gl.activeTexture(gl.TEXTURE3);
+        gl.bindTexture(gl.TEXTURE_2D, this.perlinTexture);
+        gl.uniform1i(this.programInfo.uniformLocations.uPerlinNoise, 3);
+        // gl.texImage2D(gl.TEXTURE_2D, 0, gl.LUMINANCE_ALPHA, PERLIN_SIZE, PERLIN_SIZE, 0, gl.LUMINANCE_ALPHA, gl.UNSIGNED_BYTE, new Uint8Array(this.perlinNoise));
+
         const view = mat3.create();
         mat3.mul(view, this.displayMatrix, transform);
         if (!mat3.invert(view, view)) {
@@ -346,7 +387,6 @@ export class Graphics {
 
         const m = mat3.multiply(mat3.create(), this.displayMatrix, camera.transform);
         camera.ctx.transform(m[0], m[1], m[3], m[4], m[6], m[7]);
-
         camera.ctx.strokeStyle = '#fff';
         camera.ctx.lineWidth = 0.05;
         for (const bucket of this.sprites) {
@@ -360,11 +400,13 @@ export class Graphics {
 
     private resizeCanvasToDisplaySize() {
         const gl = this.gl;
-        const boundingRect = this.el.getBoundingClientRect();
-        this.pixelRatio = window.devicePixelRatio;
+        const boundingRect = this.el.parentElement!.getBoundingClientRect();
+        this.pixelRatio = 1; // override pixel ratio window.devicePixelRatio;
         this.width = boundingRect.width * this.pixelRatio;
         this.height = boundingRect.height * this.pixelRatio;
         if (gl.canvas.width != this.width || gl.canvas.height != this.height) {
+            this.el.style.transformOrigin = '0 0'
+            this.el.style.transform = `scale(${1/this.pixelRatio})`;
             gl.canvas.width = this.width;
             gl.canvas.height = this.height;
             gl.viewport(0, 0, this.width, this.height);
