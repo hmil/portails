@@ -14,10 +14,10 @@ async function main() {
     const loader = new AssetsLoader();
     const assets = await loader.load(AssetsLibrary);
 
-    const graphics = new Graphics(assets);
+    const graphics = new Graphics();
     const physics = new Physics();
     const events = new EventBus();
-    const context = new Context(physics, graphics, events);
+    const context = new Context(physics, graphics, events, assets);
     const gameLoop = new GameLoop(context);
     
     const player = new PlayerCharacter(context);

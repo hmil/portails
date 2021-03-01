@@ -1,10 +1,9 @@
 import { mat3, vec2 } from "gl-matrix";
-import { GameEvent } from "lib/events";
-import { Camera, SCREEN_HEIGHT, SCREEN_WIDTH } from "lib/graphics";
+import { Camera } from "lib/graphics";
 import { PortalService } from "lib/PortalService";
-import { Sprite } from "lib/sprite";
+import { Sprite, StandardSprite } from "lib/sprite";
 import * as planck from "planck-js";
-import { Transform, Vec2 } from "planck-js";
+import { Vec2 } from "planck-js";
 import { GameObject } from "./game-object";
 
 const WIDTH = 0.2;
@@ -16,18 +15,24 @@ export interface IPortal {
     normal: Vec2;
 }
 
+export interface PortalSurrogate {
+    body: planck.Body;
+    sprite: Sprite;
+}
 
 export interface Portalizable {
-    surrogate: {
-        sprite: Sprite;
-        body: planck.Body;
-        active: number;
-    }
+    portalSurrogate: PortalSurrogate | null;
+    createBody(): planck.Body;
+    sprite: StandardSprite;
     onPortal?: () => void;
 }
 
+export function initPortalSurrogate(): PortalSurrogate | null {
+    return null;
+}
+
 export function isPortalizable(p: unknown): p is Portalizable {
-    return typeof p === 'object' && p != null && 'surrogate' in p;
+    return typeof p === 'object' && p != null && 'portalSurrogate' in p;
 }
 
 export class Portal extends GameObject<void> {
@@ -42,6 +47,8 @@ export class Portal extends GameObject<void> {
     private portalingBodies = new Map<planck.Body, IPortal>();
 
     private isDrawing = false;
+
+    private finishedPortalizables: Portalizable[] = [];
 
     init() {
         this.context.graphics.addSprite(this);
@@ -74,31 +81,29 @@ export class Portal extends GameObject<void> {
             }
 
             if (this.portal1 && this.portal2) {
-                const wall = contact.getFixtureA().getBody().isStatic() ? contact.getFixtureA() : contact.getFixtureA();
+                const wall = contact.getFixtureA().getBody().isStatic() ? contact.getFixtureA() : contact.getFixtureB();
                 if (wall.getUserData() === 'portal-gate') {
                     return;
                 }
                 for (const contactPoint of contactPoints) {
-                    if (this.portal1.sensor.getShape().testPoint(this.portal1.body.getTransform(), contactPoint)) {
-                        contact.setEnabled(false);
-                        return;
-                    }
-                    if (this.portal2.sensor.getShape().testPoint(this.portal2.body.getTransform(), contactPoint)) {
-                        contact.setEnabled(false);
+                    if (!this.portal1.sensor.getShape().testPoint(this.portal1.body.getTransform(), contactPoint)
+                    && !this.portal2.sensor.getShape().testPoint(this.portal2.body.getTransform(), contactPoint)) {
                         return;
                     }
                 }
+                contact.setEnabled(false);
             }
         });
 
         this.on('after-physics', this.update);
+        // this.on('before-physics', this.preupdate);
     }
 
     private stopPortal(body: planck.Body) {
         const userData = body.getUserData();
         if (isPortalizable(userData)) {
-            userData.surrogate.active--;
             this.portalingBodies.delete(body);
+            this.finishedPortalizables.push(userData);
         }
     }
 
@@ -106,55 +111,124 @@ export class Portal extends GameObject<void> {
         const userData = body.getUserData();
         if (isPortalizable(userData)) {
             this.portalingBodies.set(body, portal);
-            userData.surrogate.active++;
         }
     }
 
+    // private preupdate = () => {
+    //     for (const [body, portal] of this.portalingBodies) {
+    //         const surrogate = (body.getUserData() as Portalizable).surrogate;
+
+    //         const otherPortal = (this.portal1 === portal) ? this.portal2 : this.portal1;
+    //         if (otherPortal == null) {
+    //             return;
+    //         }
+
+    //         const solution = this.solveTeleportation(surrogate.body, surr)
+
+    //         body.setPosition(surrogate.body.getPosition());
+    //     }
+    // }
+
     private update = () => {
+        for (const p of this.finishedPortalizables) {
+            if (p.portalSurrogate != null) {
+                const surrogate = p.portalSurrogate;
+                p.portalSurrogate = null;
+                this.context.physics.world.destroyBody(surrogate.body);
+                this.context.graphics.removeSprite(surrogate.sprite);
+            }
+        }
+        this.finishedPortalizables.length = 0;
+
         for (const [body, portal] of this.portalingBodies) {
             const otherPortal = (this.portal1 === portal) ? this.portal2 : this.portal1;
             if (otherPortal == null) {
                 return;
             }
-            const surrogate = (body.getUserData() as Portalizable).surrogate;
+            
+            const solution = this.solveTeleportation(body.getPosition(), body.getLinearVelocity(), body.getAngle(), body.getAngularVelocity(), portal, otherPortal);
+            const portalizable = (body.getUserData() as Portalizable);
 
-            const shouldMirror = PortalService.isMirror;
-
-            const portalTangent = Vec2(-portal.normal.y, portal.normal.x);
-            const bodyPos = body.getPosition();
-            const relativeBodyPos = bodyPos.clone().sub(portal.body.getPosition().clone());
-            const primaryDisplacement = this.dot(relativeBodyPos, portal.normal);
-            const tangentDisplacement = this.dot(relativeBodyPos, portalTangent) * (shouldMirror ? -1 : 1);
-            const primaryVelocity = this.dot(body.getLinearVelocity(), portal.normal);
-            const tangentVelocity = this.dot(body.getLinearVelocity(), portalTangent) * (shouldMirror ? -1.0 : 1.0);
-
-            const srcNormal = vec2.fromValues(-portal.normal.x, -portal.normal.y);
-            const dstNormal = vec2.fromValues(otherPortal.normal.x, otherPortal.normal.y);
-            if (shouldMirror) {
-                vec2.mul(dstNormal, dstNormal, vec2.fromValues(-1, 1));
+            if (portalizable.portalSurrogate == null) {
+                portalizable.portalSurrogate = this.createSurrogate(portalizable);
             }
-            const angle = shouldMirror ? Math.atan2(srcNormal[1], srcNormal[0]) - Math.atan2(dstNormal[1], dstNormal[0]) :
-            Math.atan2(dstNormal[1], dstNormal[0]) - Math.atan2(srcNormal[1], srcNormal[0]);
 
-            const otherTangent = Vec2(-otherPortal.normal.y, otherPortal.normal.x);
-            const nextPos = otherPortal.normal.clone().mul(-primaryDisplacement).add(otherTangent.mul(-tangentDisplacement)).add(otherPortal.body.getPosition().clone());
-            const nextAngle = (angle + body.getAngle() * (shouldMirror ? -1 : 1)) % (2 * Math.PI);
-            const nextSpeed = otherPortal.normal.clone().mul(-primaryVelocity).add(otherTangent.clone().mul(tangentVelocity));
-            if (primaryDisplacement < 0) {
-                surrogate.active++;
-                (body.getUserData() as Portalizable).onPortal?.();
-                this.teleportBody(surrogate.body, body.getPosition().clone(), body.getLinearVelocity().clone(), body.getAngle());
-                this.teleportBody(body, nextPos, nextSpeed, nextAngle);
+            if (solution.primaryDisplacement < 0) {
+                portalizable.onPortal?.();
+                let joint = body.getJointList();
+                while (joint != null) {
+                    const otherBody = joint.other;
+                    const otherSolution = this.solveTeleportation(otherBody.getPosition(), otherBody.getLinearVelocity(), otherBody.getAngle(), otherBody.getAngularVelocity(), portal, otherPortal);
+                    this.teleportBody(otherBody, otherSolution.pos, otherSolution.velocity, otherSolution.rotation, otherSolution.angularVelocity);
+                    joint = joint.next;
+                }
+                this.teleportBody(portalizable.portalSurrogate.body, body.getPosition().clone(), body.getLinearVelocity().clone(), body.getAngle(), body.getAngularVelocity());
+
+                this.teleportBody(body, solution.pos, solution.velocity, solution.rotation, solution.angularVelocity);
             } else {
-                this.teleportBody(surrogate.body, nextPos, nextSpeed, nextAngle);
+                this.teleportBody(portalizable.portalSurrogate.body, solution.pos, solution.velocity, solution.rotation, solution.angularVelocity);
             }
         }
     }
 
-    private teleportBody(body: planck.Body, position: planck.Vec2, velocity: planck.Vec2, angle: number) {
+    private createSurrogate(portalizable: Portalizable): PortalSurrogate {
+        const body = portalizable.createBody();
+        body.setUserData('portal-surrogate');
+        const sprite: Sprite = {
+            get zIndex() { return portalizable.sprite.zIndex; },
+            draw(ctx: CanvasRenderingContext2D) {
+                const oldBody = portalizable.sprite.body;
+                portalizable.sprite.body = body;
+                const savedTrsfm = portalizable.sprite.transform;
+                if (PortalService.isMirror) {
+                    portalizable.sprite.transform = mat3.scale(mat3.create(), portalizable.sprite.transform, vec2.fromValues(-1, 1));
+                }
+                portalizable.sprite.draw(ctx);
+
+                portalizable.sprite.transform = savedTrsfm;
+                portalizable.sprite.body = oldBody;
+            }
+        }
+        this.context.graphics.addSprite(sprite);
+        
+        return { body, sprite };
+    }
+
+    private solveTeleportation(pos: planck.Vec2, velocity: planck.Vec2, rotation: number, rotationSpeed: number, portal: IPortal, otherPortal: IPortal):
+        { pos: planck.Vec2, velocity: planck.Vec2, rotation: number, primaryDisplacement: number, angularVelocity: number} {
+
+        const shouldMirror = PortalService.isMirror;
+
+        const portalTangent = Vec2(-portal.normal.y, portal.normal.x);
+        const relativeBodyPos = pos.clone().sub(portal.body.getPosition().clone());
+        const primaryDisplacement = this.dot(relativeBodyPos, portal.normal);
+        const tangentDisplacement = this.dot(relativeBodyPos, portalTangent) * (shouldMirror ? -1 : 1);
+        const primaryVelocity = this.dot(velocity, portal.normal);
+        const tangentVelocity = this.dot(velocity, portalTangent) * (shouldMirror ? -1.0 : 1.0);
+
+        const srcNormal = vec2.fromValues(-portal.normal.x, -portal.normal.y);
+        const dstNormal = vec2.fromValues(otherPortal.normal.x, otherPortal.normal.y);
+        if (shouldMirror) {
+            vec2.mul(dstNormal, dstNormal, vec2.fromValues(-1, 1));
+        }
+        const angle = shouldMirror ? Math.atan2(srcNormal[1], srcNormal[0]) - Math.atan2(dstNormal[1], dstNormal[0]) :
+        Math.atan2(dstNormal[1], dstNormal[0]) - Math.atan2(srcNormal[1], srcNormal[0]);
+
+        const otherTangent = Vec2(-otherPortal.normal.y, otherPortal.normal.x);
+        const nextPos = otherPortal.normal.clone().mul(-primaryDisplacement).add(otherTangent.mul(-tangentDisplacement)).add(otherPortal.body.getPosition().clone());
+        const nextAngle = (angle + rotation * (shouldMirror ? -1 : 1)) % (2 * Math.PI);
+        const nextSpeed = otherPortal.normal.clone().mul(-primaryVelocity).add(otherTangent.clone().mul(tangentVelocity));
+
+        const nextRotationSpeed = shouldMirror ? -rotationSpeed : rotationSpeed;
+
+        return {pos: nextPos, velocity: nextSpeed, rotation: nextAngle, primaryDisplacement, angularVelocity: nextRotationSpeed}
+    }
+
+    private teleportBody(body: planck.Body, position: planck.Vec2, velocity: planck.Vec2, angle: number, angularVelocity: number) {
         body.setPosition(position);
         body.setLinearVelocity(velocity)
         body.setAngle(angle);
+        body.setAngularVelocity(angularVelocity);
     }
 
     private createPortal(): IPortal {

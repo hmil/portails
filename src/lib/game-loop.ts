@@ -46,7 +46,10 @@ export class GameLoop {
         if (this._running) {
             return;
         }
-        console.log('Starting');
+        if (document.hidden) {
+            this.stoppedInBackground = true;
+            return;
+        }
         this._running = true;
         this.lastTime = Date.now();
         this.scheduleNext();

@@ -41,7 +41,7 @@ export class Wall extends GameObject<[number, number, number, number, number?]> 
         return this.body;
     }
 
-    public draw(ctx: CanvasRenderingContext2D, assets: Assets) {
+    public draw(ctx: CanvasRenderingContext2D) {
         if (this.body == null) {
             return;
         }
@@ -49,7 +49,7 @@ export class Wall extends GameObject<[number, number, number, number, number?]> 
         ctx.strokeStyle = '#0ff';
         ctx.translate(pos.x, pos.y);
         ctx.rotate(this.body.getAngle());
-        assets.wallFull.draw(ctx, -this.width / 2, -this.height / 2, this.width, this.height);
+        this.context.assets.wallFull.draw(ctx, -this.width / 2, -this.height / 2, this.width, this.height);
         // ctx.strokeRect(-this.width / 2, -this.height / 2, this.width, this.height);
     }
 }

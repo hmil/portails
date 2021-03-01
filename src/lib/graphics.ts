@@ -89,7 +89,7 @@ export class Graphics {
 
     private perlinNoise: Uint32Array = this.createPerlinNoise();
 
-    constructor(private readonly assets: Assets) {
+    constructor() {
         this.el = document.createElement('canvas');
         this.el.addEventListener('contextmenu', event => event.preventDefault());
         // this.el.style.width = '100%';
@@ -246,6 +246,17 @@ export class Graphics {
         bucket.push(sprite);
     }
 
+    public removeSprite(sprite: Sprite): void {
+        const z = sprite.zIndex ?? 1;
+        const bucket = this.sprites[z];
+        if (bucket) {
+            const idx = bucket.indexOf(sprite);
+            if (idx >= 0) {
+                bucket.splice(idx, 1);
+            }
+        }
+    }
+
     public mapToWorldCoordinates(clientX: number, clientY: number) {
         const invertMatrx = mat3.multiply(mat3.create(), this.displayMatrix, this.getMainCamera().transform);
         mat3.invert(invertMatrx, invertMatrx);
@@ -392,7 +403,7 @@ export class Graphics {
         for (const bucket of this.sprites) {
             for (const sprite of bucket) {
                 camera.ctx.save();
-                sprite.draw(camera.ctx, this.assets);
+                sprite.draw(camera.ctx);
                 camera.ctx.restore();
             }
         }
