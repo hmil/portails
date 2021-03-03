@@ -8,6 +8,7 @@ import { Vec2 } from 'planck-js';
 
 import { GameObject } from './game-object';
 import { initPortalSurrogate, Portal, Portalizable, PortalSurrogate } from './portal';
+import { Projectile } from './projectile';
 
 // const RADIUS = 50;
 
@@ -83,6 +84,8 @@ export class PlayerCharacter extends GameObject implements Portalizable, Sprite 
 
     private propellerSprite = new StandardSprite(this.propeller, this.context.assets.wallFull, 1, 1);
 
+    private mouseCoords: [number, number] = [0, 0];
+
     init() {
         this.context.graphics.addSprite(this);
         // this.context.graphics.addSprite(thids.propellerSprite);
@@ -117,6 +120,8 @@ export class PlayerCharacter extends GameObject implements Portalizable, Sprite 
         }
         camera.rotate(-this.body.getAngle());
         camera.translate(-this.body.getPosition().x, -this.body.getPosition().y);
+        // const mouseWorldCoords = this.context.graphics.mapToWorldCoordinates(this.mouseCoords[0], this.mouseCoords[1]);
+        // camera.translate(-(9 * this.body.getPosition().x + mouseWorldCoords[0])/10, -(9*this.body.getPosition().y + mouseWorldCoords[1])/10);
 
         mat3.identity(this.sprite.transform);
 
@@ -202,7 +207,8 @@ export class PlayerCharacter extends GameObject implements Portalizable, Sprite 
             allowSleep: false,
             angle: 0,
             fixedRotation: true,
-            userData: this
+            userData: this,
+            linearDamping: 0.8,
         });
 
         body.createFixture({
@@ -254,6 +260,8 @@ export class PlayerCharacter extends GameObject implements Portalizable, Sprite 
     }
 
     private onMouseMove = (evt: MouseEvent) => {
+        this.mouseCoords[0] = evt.x;
+        this.mouseCoords[1] = evt.y;
         // const [x, y] = this.graphics.mapToWorldCoordinates(evt.clientX, evt.clientY);
         // this.crosshair.setPosition(x, y);
     };
@@ -274,22 +282,31 @@ export class PlayerCharacter extends GameObject implements Portalizable, Sprite 
         const direction = planck.Vec2(x - playerPos.x, y - playerPos.y);
         direction.normalize();
         const start = playerPos.clone().add(direction);
-        const end = playerPos.clone().add(direction.mul(100));
 
-        let f = 1;
-        this.context.physics.world.rayCast(start, end, (fixture, point, normal, fraction) => {
-            if (fraction < f && fixture.getUserData() !== 'portal-gate' && fixture.getUserData() !== 'portal' && fixture.getBody().isStatic()) {
-                const position = Vec2(point.x, point.y);
-                console.log(normal);
-                if (evt.button === 0) {
-                    this.portal.setPortal1(position, Math.atan2(normal.y, normal.x));
-                } else if (evt.button === 2) {
-                    this.portal.setPortal2(position, Math.atan2(normal.y, normal.x));
-                }
-                f = fraction;
-            }
-            return 1;
+        this.createObject(Projectile, {
+            position: start,
+            direction: direction.clone().mul(30).add(this.body.getLinearVelocity()),
+            type: evt.button === 0 ? 1 : 2,
+            portal: this.portal
         });
+    
+        // const end = playerPos.clone().add(direction.mul(100));
+
+
+        // let f = 1;
+        // this.context.physics.world.rayCast(start, end, (fixture, point, normal, fraction) => {
+        //     if (fraction < f && fixture.getUserData() !== 'portal-gate' && fixture.getUserData() !== 'portal' && fixture.getBody().isStatic()) {
+        //         const position = Vec2(point.x, point.y);
+        //         console.log(normal);
+        //         if (evt.button === 0) {
+        //             this.portal.setPortal1(position, Math.atan2(normal.y, normal.x));
+        //         } else if (evt.button === 2) {
+        //             this.portal.setPortal2(position, Math.atan2(normal.y, normal.x));
+        //         }
+        //         f = fraction;
+        //     }
+        //     return 1;
+        // });
 
         return false;
     };

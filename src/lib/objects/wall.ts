@@ -1,6 +1,7 @@
 import { Assets } from "lib/assets";
 import { GameObject } from "./game-object";
 import * as planck from 'planck-js';
+import { PORTAL_PROJECTILE_CATEGORY } from "./projectile";
 
 export class Wall extends GameObject<[number, number, number, number, number?]> {
 
@@ -35,7 +36,8 @@ export class Wall extends GameObject<[number, number, number, number, number?]> 
         this.body.createFixture({
             shape: box,
             density: 1.0,
-            friction: 0.3
+            friction: 0.3,
+            filterCategoryBits: 0x1 | PORTAL_PROJECTILE_CATEGORY,
         });
 
         return this.body;

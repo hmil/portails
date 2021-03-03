@@ -3,7 +3,7 @@ import { Sprite } from "./sprite";
 import { mat3, mat4, vec2, vec3 } from 'gl-matrix';
 import { PortalService } from "./PortalService";
 
-export const SCREEN_WIDTH = 16;
+export const SCREEN_WIDTH = 20;
 export const SCREEN_HEIGHT = 9;
 
 const PERLIN_SIZE = 64;
@@ -412,7 +412,7 @@ export class Graphics {
     private resizeCanvasToDisplaySize() {
         const gl = this.gl;
         const boundingRect = this.el.parentElement!.getBoundingClientRect();
-        this.pixelRatio = 1; // override pixel ratio window.devicePixelRatio;
+        this.pixelRatio = 1; // window.devicePixelRatio;
         this.width = boundingRect.width * this.pixelRatio;
         this.height = boundingRect.height * this.pixelRatio;
         if (gl.canvas.width != this.width || gl.canvas.height != this.height) {

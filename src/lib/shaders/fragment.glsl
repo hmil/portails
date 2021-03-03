@@ -66,6 +66,7 @@ float getPortalZ(in vec2 characterPos, in vec2 portalOrigin, in vec2 portalNorma
 vec4 getPortalSample(in float deltaHeight, in vec2 characterPortal, in vec2 portalNormal, in sampler2D camera, in vec3 portalColor, in vec3 otherPortalColor) {
     float gain = 4.0 * (length(characterPortal) + 1.0);
     vec3 theTint = mix(otherPortalColor, portalColor, clamp(length(characterPortal) / 3.0 + 0.5));
+    // TODO: What does this mean? Can simplify?
     vec3 color = mix(theTint, vec3(texture2D(camera, vUv)), clamp(10.0 * deltaHeight * gain - 9.0));
     vec3 colorOpposite = mix(theTint, vec3(texture2D(camera, vUv)), clamp(deltaHeight * gain));
     vec3 colorComposite = mix(colorOpposite, color, clamp(length(characterPortal)));

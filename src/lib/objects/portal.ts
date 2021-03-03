@@ -42,7 +42,7 @@ export class Portal extends GameObject<void> {
     private portal1?: IPortal;
     private portal2?: IPortal;
 
-    readonly zIndex = 1;
+    readonly zIndex = 2;
 
     private portalingBodies = new Map<planck.Body, IPortal>();
 
@@ -96,7 +96,6 @@ export class Portal extends GameObject<void> {
         });
 
         this.on('after-physics', this.update);
-        // this.on('before-physics', this.preupdate);
     }
 
     private stopPortal(body: planck.Body) {
@@ -113,21 +112,6 @@ export class Portal extends GameObject<void> {
             this.portalingBodies.set(body, portal);
         }
     }
-
-    // private preupdate = () => {
-    //     for (const [body, portal] of this.portalingBodies) {
-    //         const surrogate = (body.getUserData() as Portalizable).surrogate;
-
-    //         const otherPortal = (this.portal1 === portal) ? this.portal2 : this.portal1;
-    //         if (otherPortal == null) {
-    //             return;
-    //         }
-
-    //         const solution = this.solveTeleportation(surrogate.body, surr)
-
-    //         body.setPosition(surrogate.body.getPosition());
-    //     }
-    // }
 
     private update = () => {
         for (const p of this.finishedPortalizables) {
@@ -259,26 +243,26 @@ export class Portal extends GameObject<void> {
         return v1.x * v2.x + v1.y * v2.y;
     }
 
-    setPortal1(position: Vec2, angle: number) {
+    setPortal1(position: Vec2, normal: Vec2) {
         if (!this.portal1) {
             this.portal1 = this.createPortal();
         }
         this.portal1.body.setPosition(position);
-        this.portal1.body.setAngle(angle);
-        this.portal1.normal = Vec2(Math.cos(angle), Math.sin(angle));
+        this.portal1.body.setAngle(Math.atan2(normal.y, normal.x));
+        this.portal1.normal = normal;
         vec2.set(PortalService.portal1Position, position.x, position.y);
-        vec2.set(PortalService.portal1Normal, Math.cos(angle), Math.sin(angle));
+        vec2.set(PortalService.portal1Normal, normal.x, normal.y);
     }
 
-    setPortal2(position: Vec2, angle: number) {
+    setPortal2(position: Vec2, normal: Vec2) {
         if (!this.portal2) {
             this.portal2 = this.createPortal();
         }
         this.portal2.body.setPosition(position);
-        this.portal2.body.setAngle(angle);
-        this.portal2.normal = Vec2(Math.cos(angle), Math.sin(angle));
+        this.portal2.body.setAngle(Math.atan2(normal.y, normal.x));
+        this.portal2.normal = normal;
         vec2.set(PortalService.portal2Position, position.x, position.y);
-        vec2.set(PortalService.portal2Normal, Math.cos(angle), Math.sin(angle));
+        vec2.set(PortalService.portal2Normal, normal.x, normal.y);
     }
 
     draw(ctx: CanvasRenderingContext2D) {
