@@ -1,9 +1,8 @@
-import { vec2 } from "gl-matrix";
-import { Physics } from "lib/physics";
-import { Sprite } from "lib/sprite";
-import { Circle, Vec2 } from "planck-js";
-import { GameObject } from "./game-object";
-import { Portal } from "./portal";
+import { Sprite } from 'lib/sprite';
+import { Chain, Circle, Contact, Edge, Shape, Vec2 } from 'planck-js';
+
+import { GameObject } from './game-object';
+import { Portal } from './portal';
 
 export interface ProjectileProps {
     position: Vec2;
@@ -13,6 +12,11 @@ export interface ProjectileProps {
 }
 
 const RADIUS = 0.1;
+
+// Minimum distance from end of edge to portal center
+const KEEPOFF = 1;
+// To negate rounding errors
+const PRECISION = 0.001;
 
 export const PORTAL_PROJECTILE_CATEGORY = 0x2;
 
@@ -25,9 +29,11 @@ export class Projectile extends GameObject<ProjectileProps> implements Sprite {
     portal!: Portal;
     type: 1 | 2 = 1;
 
-    private static resolveCollision(self: Projectile, pos: Vec2, normal: Vec2) {
+    private static resolveCollision(self: Projectile, pos: Vec2, normal: Vec2, create: boolean) {
         Projectile.toRemove.push(self);
-        Projectile.portalToCreate.push({pos, normal, type: self.type});
+        if (create) {
+            Projectile.portalToCreate.push({pos, normal, type: self.type});
+        }
     }
 
     private body = this.context.physics.world.createDynamicBody({
@@ -47,6 +53,56 @@ export class Projectile extends GameObject<ProjectileProps> implements Sprite {
 
     zIndex = 3;
 
+    private resolveFixtures(contact: Contact) {
+        const fA = contact.getFixtureA();
+        const fB = contact.getFixtureB();
+        const manifold = contact.getWorldManifold(null);
+        if (manifold == null || manifold.points.length < 1) {
+            return;
+        }
+
+        const point = manifold.points[0];
+        const normal = manifold.normal;
+
+        const userA = fA.getUserData();
+        const userB = fB.getUserData();
+        if (userA instanceof Projectile) {
+            return { point, normal: normal.mul(-1), fixture: fB, projectile: userA };
+        } else if (userB instanceof Projectile) {
+            return { point, normal, fixture: fA, projectile: userB };
+        }
+    }
+
+    private correctImpactPoint(point: Vec2, end: Vec2, tangent: Vec2): Vec2 {
+        const distance = point.clone().sub(end).length();
+        if (distance < KEEPOFF) {
+            return point.add(tangent.clone().mul(KEEPOFF - distance));
+        }
+        return point;
+    }
+
+    private correctImpactNormal(normal: Vec2, tangent: Vec2) {
+        const newNormal = Vec2(tangent.y, tangent.x);
+        if (this.dot(normal, newNormal) < 0) {
+            return newNormal.mul(-1);
+        }
+        return newNormal;
+    }
+
+    private getBounds(contact: Contact, shape: Shape): [Vec2, Vec2] | null {
+        if (shape.m_type === 'chain') {
+            const edge = new Edge(Vec2(0,0), Vec2(0,0));
+            (shape as Chain).getChildEdge(edge, contact.getChildIndexA());
+
+            return [edge.m_vertex1, edge.m_vertex2]
+        }
+        return null;
+    }
+
+    private dot(v1: Vec2, v2: Vec2) {
+        return v1.x * v2.x + v1.y * v2.y;
+    }
+
     init(props: ProjectileProps) {
         this.type = props.type;
         this.portal = props.portal;
@@ -65,21 +121,29 @@ export class Projectile extends GameObject<ProjectileProps> implements Sprite {
         if (!Projectile.physicsInitialized) {
             Projectile.physicsInitialized = true;
             this.context.physics.world.on('pre-solve', (contact, oldManifold) => {
-                const fA = contact.getFixtureA();
-                const fB = contact.getFixtureB();
-                const userA = fA.getUserData();
-                const userB = fB.getUserData();
-                const manifold = contact.getWorldManifold(null);
-                if (manifold == null || manifold.points.length < 1) {
+                const resolved = this.resolveFixtures(contact);
+                if (resolved == null) {
                     return;
                 }
-                const point = manifold.points[0];
-                const normal = manifold.normal;
-                if (userA instanceof Projectile) {
-                    Projectile.resolveCollision(userA, point, normal);
-                } else if (userB instanceof Projectile) {
-                    Projectile.resolveCollision(userB, point, normal);
+                const shape = resolved.fixture.getShape();
+                const bounds = this.getBounds(contact, shape);
+                let point = resolved.point;
+                let normal = resolved.normal;
+                if (bounds != null) {
+                    const tangent = bounds[1].clone().sub(bounds[0]);
+                    tangent.normalize();
+                    normal = this.correctImpactNormal(normal, tangent);
+
+                    point = this.correctImpactPoint(point, bounds[0], tangent);
+                    point = this.correctImpactPoint(point, bounds[1], tangent.mul(-1));
+                    const remaining = point.clone().sub(bounds[0]).length();
+                    if (KEEPOFF - remaining > PRECISION) {
+                        console.log('abort');
+                        Projectile.resolveCollision(resolved.projectile, point, normal, false);
+                        return;
+                    }
                 }
+                Projectile.resolveCollision(resolved.projectile, point, normal, true);
             });
             this.on('after-physics', () => {
                 for (const toRemove of Projectile.toRemove) {

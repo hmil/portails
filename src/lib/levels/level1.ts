@@ -53,12 +53,12 @@ export class Level1 extends GameObject {
             shape: Chain([
                 toWorld(Vec2(-108.755, 612.802)),
                 toWorld(Vec2(61.33, 611.151)),
-                toWorld(Vec2(61.33, 815.928)),
-                toWorld(Vec2(612.275, 815.928)),
+                toWorld(Vec2(61.33, 814)),
+                toWorld(Vec2(612.275, 814)),
                 toWorld(Vec2(612.275, 769.891)),
                 toWorld(Vec2(677.116, 769.891)),
-                toWorld(Vec2(677.116, 815.13)),
-                toWorld(Vec2(1164.105, 815.13)),
+                toWorld(Vec2(677.116, 814)),
+                toWorld(Vec2(1164.105, 814)),
                 toWorld(Vec2(1164.105, 607.698)),
                 toWorld(Vec2(1089.773, 607.698)),
                 toWorld(Vec2(1089.773, 540.638)),
@@ -74,11 +74,11 @@ export class Level1 extends GameObject {
                 toWorld(Vec2(481.296, 81.135)),
                 toWorld(Vec2(481.296, 544.562)),
                 toWorld(Vec2(611.777, 544.562)),
-                 toWorld(Vec2(611.777, 701.534)),
-                 toWorld(Vec2(676.559, 701.534)),
-                 toWorld(Vec2(676.559, 543.051)),
-                 toWorld(Vec2(739.034, 543.051)),
-                 toWorld(Vec2(739.034, 84.555)),
+                toWorld(Vec2(611.777, 701.534)),
+                toWorld(Vec2(676.559, 701.534)),
+                toWorld(Vec2(676.559, 543.051)),
+                toWorld(Vec2(739.034, 543.051)),
+                toWorld(Vec2(739.034, 84.555)),
             ])
         });
         this.context.graphics.addSprite({
