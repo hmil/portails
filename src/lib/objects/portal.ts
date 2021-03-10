@@ -8,11 +8,14 @@ import { GameObject } from "./game-object";
 
 const WIDTH = 0.2;
 const HEIGHT = 2;
+// To negate rounding errors
+const PRECISION = 0.001;
 
 export interface IPortal {
     body: planck.Body;
     sensor: planck.Fixture;
     normal: Vec2;
+    index: number;
 }
 
 export interface PortalSurrogate {
@@ -44,11 +47,11 @@ export class Portal extends GameObject<void> {
 
     readonly zIndex = 2;
 
-    private portalingBodies = new Map<planck.Body, IPortal>();
+    private portalingBodies = new Map<planck.Body, { count: number, portal: IPortal}>();
 
     private isDrawing = false;
 
-    private finishedPortalizables: Portalizable[] = [];
+    private portalingToRemove: planck.Body[] = [];
 
     init() {
         this.context.graphics.addSprite(this);
@@ -65,13 +68,15 @@ export class Portal extends GameObject<void> {
             } 
         });
         this.context.physics.world.on('end-contact', (contact) => {
-            if (contact.getFixtureA().getUserData() === 'portal' && 
-                (contact.getFixtureA().getBody() === this.portal1?.body || contact.getFixtureA().getBody() === this.portal2?.body)) {
-                this.stopPortal(contact.getFixtureB().getBody());
-            } else if (contact.getFixtureB().getUserData() === 'portal' && 
-                        (contact.getFixtureB().getBody() === this.portal1?.body || contact.getFixtureB().getBody() === this.portal2?.body)) {
-                this.stopPortal(contact.getFixtureA().getBody());
-            } 
+            if (contact.getFixtureA().getUserData() === 'portal' && contact.getFixtureA().getBody() === this.portal1?.body) {
+                this.stopPortal(contact.getFixtureB().getBody(), this.portal1);
+            } else if (contact.getFixtureA().getUserData() === 'portal' && contact.getFixtureA().getBody() === this.portal2?.body) {
+                this.stopPortal(contact.getFixtureB().getBody(), this.portal2);
+            } else if (contact.getFixtureB().getUserData() === 'portal' && contact.getFixtureB().getBody() === this.portal1?.body) {
+                this.stopPortal(contact.getFixtureA().getBody(), this.portal1);
+            } else if (contact.getFixtureB().getUserData() === 'portal' && contact.getFixtureB().getBody() === this.portal2?.body) {
+                this.stopPortal(contact.getFixtureA().getBody(), this.portal2);
+            }
         });
 
         this.context.physics.world.on('pre-solve', (contact, oldManifold) => {
@@ -96,35 +101,67 @@ export class Portal extends GameObject<void> {
         });
 
         this.on('after-physics', this.update);
+        this.on('after-render', this.cleanup);
     }
 
-    private stopPortal(body: planck.Body) {
+    private stopPortal(body: planck.Body, portal: IPortal) {
         const userData = body.getUserData();
         if (isPortalizable(userData)) {
-            this.portalingBodies.delete(body);
-            this.finishedPortalizables.push(userData);
+            const portalizing = this.portalingBodies.get(body);
+            console.log('stop ' + portal.index + ' current: ' + portalizing?.portal.index);
+            if (portalizing && portalizing.portal !== portal) {
+                console.log('Bad portal sequence');
+            }
+            if (portalizing && portalizing.portal === portal) {
+                portalizing.count--;
+            }
+            console.log(this.portalingBodies.size);
         }
     }
 
     private startPortal(body: planck.Body, portal: IPortal) {
         const userData = body.getUserData();
         if (isPortalizable(userData)) {
-            this.portalingBodies.set(body, portal);
+            const portalizing = this.portalingBodies.get(body) ?? { count: 0, portal };
+            console.log('start ' + portal.index + ' current: ' + portalizing?.portal.index);
+            if (portalizing.portal !== portal) {
+                portalizing.count = 0;
+                portalizing.portal = portal;
+            }
+            portalizing.count ++;
+            this.portalingBodies.set(body, portalizing);
+            console.log(this.portalingBodies.size);
+        }
+    }
+
+    private cleanup = () => {
+        // Remove portaling from the last tick (the one tick diff is to prevent flickering)
+        for (const body of this.portalingToRemove) {
+            const portaling = this.portalingBodies.get(body);
+            console.log('removing');
+            if (portaling && portaling.count <= 0) {
+                this.portalingBodies.delete(body);
+            }
+        }
+        this.portalingToRemove.length = 0;
+
+        for (const [body, p] of this.portalingBodies) {
+            if (p.count <= 0) {
+                const portalizable = (body.getUserData() as Portalizable);
+                const surrogate = portalizable.portalSurrogate;
+                if (surrogate != null) {
+                    portalizable.portalSurrogate = null;
+                    this.context.physics.world.destroyBody(surrogate.body);
+                    this.context.graphics.removeSprite(surrogate.sprite);
+                }
+                this.portalingToRemove.push(body);
+            }
         }
     }
 
     private update = () => {
-        for (const p of this.finishedPortalizables) {
-            if (p.portalSurrogate != null) {
-                const surrogate = p.portalSurrogate;
-                p.portalSurrogate = null;
-                this.context.physics.world.destroyBody(surrogate.body);
-                this.context.graphics.removeSprite(surrogate.sprite);
-            }
-        }
-        this.finishedPortalizables.length = 0;
-
-        for (const [body, portal] of this.portalingBodies) {
+        for (const [body, portaling] of this.portalingBodies) {
+            const portal = portaling.portal;
             const otherPortal = (this.portal1 === portal) ? this.portal2 : this.portal1;
             if (otherPortal == null) {
                 return;
@@ -147,8 +184,9 @@ export class Portal extends GameObject<void> {
                     joint = joint.next;
                 }
                 this.teleportBody(portalizable.portalSurrogate.body, body.getPosition().clone(), body.getLinearVelocity().clone(), body.getAngle(), body.getAngularVelocity());
-
                 this.teleportBody(body, solution.pos, solution.velocity, solution.rotation, solution.angularVelocity);
+                portaling.portal = portaling.portal.index === 1 ? this.portal2! : this.portal1!;
+                portaling.count = 0;
             } else {
                 this.teleportBody(portalizable.portalSurrogate.body, solution.pos, solution.velocity, solution.rotation, solution.angularVelocity);
             }
@@ -187,9 +225,15 @@ export class Portal extends GameObject<void> {
         const relativeBodyPos = pos.clone().sub(portal.body.getPosition().clone());
         const primaryDisplacement = this.dot(relativeBodyPos, portal.normal);
         const tangentDisplacement = this.dot(relativeBodyPos, portalTangent) * (shouldMirror ? -1 : 1);
-        const primaryVelocity = this.dot(velocity, portal.normal);
-        const tangentVelocity = this.dot(velocity, portalTangent) * (shouldMirror ? -1.0 : 1.0);
+        let primaryVelocity = this.dot(velocity, portal.normal);
+        let tangentVelocity = this.dot(velocity, portalTangent) * (shouldMirror ? -1.0 : 1.0);
 
+        if (Math.abs(primaryVelocity) < 0.1) {
+            primaryVelocity = 0;
+        }
+        if (Math.abs(tangentVelocity) < 0.1) {
+            tangentVelocity = 0;
+        }
         const srcNormal = vec2.fromValues(-portal.normal.x, -portal.normal.y);
         const dstNormal = vec2.fromValues(otherPortal.normal.x, otherPortal.normal.y);
         if (shouldMirror) {
@@ -215,7 +259,7 @@ export class Portal extends GameObject<void> {
         body.setAngularVelocity(angularVelocity);
     }
 
-    private createPortal(): IPortal {
+    private createPortal(index: number): IPortal {
         const body = this.context.physics.world.createBody({
             type: 'static',
         });
@@ -235,7 +279,7 @@ export class Portal extends GameObject<void> {
         });
 
         return {
-            body, sensor, normal: Vec2(1, 0)
+            body, sensor, normal: Vec2(1, 0), index
         };
     }
 
@@ -245,7 +289,7 @@ export class Portal extends GameObject<void> {
 
     setPortal1(position: Vec2, normal: Vec2) {
         if (!this.portal1) {
-            this.portal1 = this.createPortal();
+            this.portal1 = this.createPortal(1);
         }
         this.portal1.body.setPosition(position);
         this.portal1.body.setAngle(Math.atan2(normal.y, normal.x));
@@ -256,7 +300,7 @@ export class Portal extends GameObject<void> {
 
     setPortal2(position: Vec2, normal: Vec2) {
         if (!this.portal2) {
-            this.portal2 = this.createPortal();
+            this.portal2 = this.createPortal(2);
         }
         this.portal2.body.setPosition(position);
         this.portal2.body.setAngle(Math.atan2(normal.y, normal.x));

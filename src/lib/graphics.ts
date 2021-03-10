@@ -99,7 +99,7 @@ export class Graphics {
             throw new Error('Canvas not supported in this browser');
         }
         this.gl = gl;
-        document.body.append(this.el);
+        document.getElementById('app')!.append(this.el);
         this.resizeCanvasToDisplaySize();
 
         // Init shader program
@@ -258,6 +258,9 @@ export class Graphics {
     }
 
     public mapToWorldCoordinates(clientX: number, clientY: number) {
+        const br = this.el.parentElement!.getBoundingClientRect();
+        clientX -= br.x;
+        clientY -= br.y;
         const invertMatrx = mat3.multiply(mat3.create(), this.displayMatrix, this.getMainCamera().transform);
         mat3.invert(invertMatrx, invertMatrx);
         const coords = vec2.fromValues(clientX, clientY);
@@ -351,15 +354,15 @@ export class Graphics {
         gl.activeTexture(gl.TEXTURE0);
         gl.bindTexture(gl.TEXTURE_2D, this.texture);
         gl.uniform1i(this.programInfo.uniformLocations.uSecondCamera, 0);
-        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, this.getMainCamera().ctx.canvas);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, this.getMainCamera().ctx.canvas);
         gl.activeTexture(gl.TEXTURE1);
         gl.bindTexture(gl.TEXTURE_2D, this.texture2);
         gl.uniform1i(this.programInfo.uniformLocations.uSecondCamera, 1);
-        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, this.secondaryCamera.ctx.canvas);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, this.secondaryCamera.ctx.canvas);
         gl.activeTexture(gl.TEXTURE2);
         gl.bindTexture(gl.TEXTURE_2D, this.texture3);
         gl.uniform1i(this.programInfo.uniformLocations.uThirdCamera, 2);
-        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, this.thirdCamera.ctx.canvas);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, this.thirdCamera.ctx.canvas);
 
         const transform = this.getMainCamera().transform;
     
@@ -367,12 +370,11 @@ export class Graphics {
         gl.uniform2f(this.programInfo.uniformLocations.portal1Origin, PortalService.portal1Position[0], PortalService.portal1Position[1]);
         gl.uniform2f(this.programInfo.uniformLocations.portal2Normal, PortalService.portal2Normal[0], PortalService.portal2Normal[1]);
         gl.uniform2f(this.programInfo.uniformLocations.portal2Origin, PortalService.portal2Position[0], PortalService.portal2Position[1]);
-        gl.uniform1f(this.programInfo.uniformLocations.uTime, Date.now() - 1613846373474);
+        gl.uniform1f(this.programInfo.uniformLocations.uTime, Date.now() % 16000);
 
         gl.activeTexture(gl.TEXTURE3);
         gl.bindTexture(gl.TEXTURE_2D, this.perlinTexture);
         gl.uniform1i(this.programInfo.uniformLocations.uPerlinNoise, 3);
-        // gl.texImage2D(gl.TEXTURE_2D, 0, gl.LUMINANCE_ALPHA, PERLIN_SIZE, PERLIN_SIZE, 0, gl.LUMINANCE_ALPHA, gl.UNSIGNED_BYTE, new Uint8Array(this.perlinNoise));
 
         const view = mat3.create();
         mat3.mul(view, this.displayMatrix, transform);
@@ -412,7 +414,7 @@ export class Graphics {
     private resizeCanvasToDisplaySize() {
         const gl = this.gl;
         const boundingRect = this.el.parentElement!.getBoundingClientRect();
-        this.pixelRatio = 1; // window.devicePixelRatio;
+        this.pixelRatio = window.devicePixelRatio;
         this.width = boundingRect.width * this.pixelRatio;
         this.height = boundingRect.height * this.pixelRatio;
         if (gl.canvas.width != this.width || gl.canvas.height != this.height) {

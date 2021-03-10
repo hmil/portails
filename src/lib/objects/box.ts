@@ -35,6 +35,7 @@ export class Box extends GameObject<[number, number]> implements Portalizable {
             position: planck.Vec2(this.x + this.width/2, this.y + this.height / 2),
             angle: this.angle,
             userData: this,
+            linearDamping: 0.95
         });
 
         let box = planck.Box(this.width/2, this.height/2);

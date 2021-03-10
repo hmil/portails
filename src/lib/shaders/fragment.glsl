@@ -82,7 +82,7 @@ float easing(float value) {
 }
 
 float getGroundHeight(vec2 characterPos) {
-    vec3 noiseCoords = vec3((vWorldCoord - characterPos) * 1.6, uTime / 1024.0);
+    vec3 noiseCoords = vec3((vWorldCoord - characterPos) * 1.6, uTime / 1000.0);
     vec3 minXYZ = floor(noiseCoords);
     vec3 topLeft =      vec3(texture2D(uPerlinNoise, mod(vec2(minXYZ) + vec2(mod(minXYZ.z, 4.0), mod(minXYZ.z / 4.0, 4.0)), 16.0)/ 16.0)) * 2.0 - 1.0;
     vec3 topRight =     vec3(texture2D(uPerlinNoise, mod(vec2(minXYZ) + vec2(mod(minXYZ.z, 4.0), mod(minXYZ.z / 4.0, 4.0)) + vec2(1.0, 0.0), 16.0)/ 16.0)) * 2.0 - 1.0;

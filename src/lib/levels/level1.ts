@@ -53,8 +53,8 @@ export class Level1 extends GameObject {
             shape: Chain([
                 toWorld(Vec2(-108.755, 612.802)),
                 toWorld(Vec2(61.33, 611.151)),
-                toWorld(Vec2(61.33, 814)),
-                toWorld(Vec2(612.275, 814)),
+                toWorld(Vec2(61.33, 813)),
+                toWorld(Vec2(612.275, 813)),
                 toWorld(Vec2(612.275, 769.891)),
                 toWorld(Vec2(677.116, 769.891)),
                 toWorld(Vec2(677.116, 814)),
