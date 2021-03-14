@@ -1,5 +1,4 @@
-import { Assets } from "./assets";
-import { Sprite } from "./sprite";
+import { Sprite } from "./graphics/sprite";
 import { mat3, mat4, vec2, vec3 } from 'gl-matrix';
 import { PortalService } from "./PortalService";
 import { loadProgram } from "./glutils";
@@ -51,11 +50,9 @@ export class Graphics {
 
     private sprites: Sprite[][] = [];
 
-    private mainCamera?: Camera;
-    public secondaryCamera: Camera;
-    public thirdCamera: Camera;
-
     public pvMatrix = mat4.create();
+
+    private cameras: Camera[] = [];
 
     private buffers: { [k: string]: WebGLBuffer };
     private programInfo: {
@@ -79,9 +76,6 @@ export class Graphics {
             uCharacterPos: WebGLUniformLocation;
         };
     };
-    private texture: WebGLTexture;
-    private texture2: WebGLTexture;
-    private texture3: WebGLTexture;
     private perlinTexture: WebGLTexture;
 
     private perlinNoise: Uint32Array = this.createPerlinNoise();
@@ -153,26 +147,6 @@ export class Graphics {
 
         this.buffers = { position: positionBuffer };
 
-        this.texture = gl.createTexture()!;
-        gl.bindTexture(gl.TEXTURE_2D, this.texture);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-
-        this.secondaryCamera = this.createCamera();
-        this.texture2 = gl.createTexture()!;
-        gl.bindTexture(gl.TEXTURE_2D, this.texture2);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-
-        this.thirdCamera = this.createCamera();
-        this.texture3 = gl.createTexture()!;
-        gl.bindTexture(gl.TEXTURE_2D, this.texture3);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-
         this.perlinTexture = gl.createTexture()!;
         gl.bindTexture(gl.TEXTURE_2D, this.perlinTexture);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
@@ -220,21 +194,14 @@ export class Graphics {
         const br = this.el.parentElement!.getBoundingClientRect();
         clientX -= br.x;
         clientY -= br.y;
-        const invertMatrx = mat3.multiply(mat3.create(), this.displayMatrix, this.getMainCamera().transform);
+        const invertMatrx = mat3.multiply(mat3.create(), this.displayMatrix, this.cameras[0].transform);
         mat3.invert(invertMatrx, invertMatrx);
         const coords = vec2.fromValues(clientX, clientY);
         vec2.scale(coords, coords, this.pixelRatio);
         return vec2.transformMat3(coords, coords, invertMatrx);
     }
 
-    public getMainCamera(): Camera {
-        if (this.mainCamera == null) {
-            this.mainCamera = this.createCamera();
-        }
-        return this.mainCamera;
-    }
-
-    public createCamera() {
+    public createCamera(): Camera {
         const gl = this.gl;
         const buffer = gl.createFramebuffer();
         const renderTexture = gl.createTexture();
@@ -248,14 +215,16 @@ export class Graphics {
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
         gl.bindFramebuffer(gl.FRAMEBUFFER, buffer);
         gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, renderTexture, 0);
-        return new Camera(this.gl, buffer, renderTexture);
+        const cam = new Camera(this.gl, buffer, renderTexture);
+        this.cameras.push(cam);
+        return cam;
     }
 
     public draw() {
         this.resizeCanvasToDisplaySize();
-        this.render(this.getMainCamera());
-        this.render(this.secondaryCamera);
-        this.render(this.thirdCamera);
+        for (const camera of this.cameras) {
+            this.render(camera);
+        }
 
         // const gl = this.gl;
         // // Set clear color to black, fully opaque
@@ -314,17 +283,21 @@ export class Graphics {
         // Tell WebGL to use our program when drawing
         gl.useProgram(this.programInfo.program);
 
-        const transform = this.getMainCamera().transform;
+        const [mainCamera, secondCamera, thirdCamera] = this.cameras;
 
         gl.activeTexture(gl.TEXTURE0);
-        gl.bindTexture(gl.TEXTURE_2D, this.getMainCamera().texture);
+        gl.bindTexture(gl.TEXTURE_2D, mainCamera.texture);
         gl.uniform1i(this.programInfo.uniformLocations.uSecondCamera, 0);
-        gl.activeTexture(gl.TEXTURE1);
-        gl.bindTexture(gl.TEXTURE_2D, this.secondaryCamera.texture);
-        gl.uniform1i(this.programInfo.uniformLocations.uSecondCamera, 1);
-        gl.activeTexture(gl.TEXTURE2);
-        gl.bindTexture(gl.TEXTURE_2D, this.thirdCamera.texture);
-        gl.uniform1i(this.programInfo.uniformLocations.uThirdCamera, 2);
+        if (secondCamera) {
+            gl.activeTexture(gl.TEXTURE1);
+            gl.bindTexture(gl.TEXTURE_2D, secondCamera.texture);
+            gl.uniform1i(this.programInfo.uniformLocations.uSecondCamera, 1);
+        }
+        if (thirdCamera) {
+            gl.activeTexture(gl.TEXTURE2);
+            gl.bindTexture(gl.TEXTURE_2D, thirdCamera.texture);
+            gl.uniform1i(this.programInfo.uniformLocations.uThirdCamera, 2);
+        }
     
         gl.uniform2f(this.programInfo.uniformLocations.portal1Normal, PortalService.portal1Normal[0], PortalService.portal1Normal[1]);
         gl.uniform2f(this.programInfo.uniformLocations.portal1Origin, PortalService.portal1Position[0], PortalService.portal1Position[1]);
@@ -339,7 +312,7 @@ export class Graphics {
 
         const view = mat4.create();
         // mat3.mul(view, this.displayMatrix, transform);
-        if (!mat4.invert(view, this.getMainCamera().pvMatrix)) {
+        if (!mat4.invert(view, mainCamera.pvMatrix)) {
             throw new Error('Cant inverse matrix');
         }
         gl.uniformMatrix4fv(this.programInfo.uniformLocations.uViewMatrix, false, view);

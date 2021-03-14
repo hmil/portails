@@ -1,14 +1,14 @@
 import { mat3, vec2 } from 'gl-matrix';
-import { Assets } from 'lib/assets';
-import { SCREEN_HEIGHT, SCREEN_WIDTH } from 'lib/graphics';
+import { Camera, SCREEN_HEIGHT, SCREEN_WIDTH } from 'lib/graphics';
 import { PortalService } from 'lib/PortalService';
-import { Sprite, StandardSprite } from 'lib/sprite';
+import { Sprite } from 'lib/graphics/sprite';
 import * as planck from 'planck-js';
 import { Vec2 } from 'planck-js';
 
 import { GameObject } from './game-object';
 import { initPortalSurrogate, Portal, Portalizable, PortalSurrogate } from './portal';
 import { Projectile } from './projectile';
+import { StandardSprite } from 'lib/graphics/standard-sprite';
 
 // const RADIUS = 50;
 
@@ -30,53 +30,38 @@ export class PlayerCharacter extends GameObject implements Portalizable, Sprite 
 
     public body: planck.Body = this.createBody();
 
-    private idleAnimationSequence = [
-        this.context.assets.character0,
-        this.context.assets.character1,
-        this.context.assets.character2,
-        this.context.assets.character3,
-        this.context.assets.character4,
-        this.context.assets.character5,
-        this.context.assets.character6,
-        this.context.assets.character7,
-        this.context.assets.character8,
-        this.context.assets.character9,
-    ];
-
-    private runAnimationSequence = [
-        this.context.assets.characterRun0,
-        this.context.assets.characterRun1,
-        this.context.assets.characterRun2,
-        this.context.assets.characterRun3,
-        this.context.assets.characterRun4,
-        this.context.assets.characterRun5,
-        this.context.assets.characterRun6,
-        this.context.assets.characterRun7,
-        this.context.assets.characterRun8,
-        this.context.assets.characterRun9,
-    ];
-
-    private jumpAnimationSequence = [
-        this.context.assets.characterJump0,
-        this.context.assets.characterJump1,
-        this.context.assets.characterJump2,
-        this.context.assets.characterJump3,
-        this.context.assets.characterJump4,
-        this.context.assets.characterJump5
-    ];
-
-    private idleSprite = new StandardSprite(this.context.graphics, this.body, this.context.assets.character0, WIDTH, HEIGHT, [{
-        x: 0, y: 0, w: 290, h: 500
-    }], { zIndex: 2, animationFPS: 12 });
-    private runSprite = new StandardSprite(this.context.graphics, this.body, this.context.assets.characterRun0, WIDTH * 1.3, HEIGHT, [{
-        x: 0, y: 0, w: 370, h: 520
-    }], { zIndex: 2, animationFPS: 20 });
-    private jumpSprite = new StandardSprite(this.context.graphics, this.body, this.context.assets.characterJump0, WIDTH * 1.35, HEIGHT * 1.1, [{
-        x: 0, y: 0, w: 399, h: 543
-    }], { zIndex: 2, animationFPS: 20, oneShot: true  });
-    // private idleSprite = new StandardSprite(this.body, this.idleAnimationSequence, WIDTH, HEIGHT, { zIndex: 2, animationFPS: 12 });
-    // private runSprite = new StandardSprite(this.body, this.runAnimationSequence, WIDTH * 1.3, HEIGHT, { zIndex: 2, animationFPS: 20 });
-    // private jumpSprite = new StandardSprite(this.body, this.jumpAnimationSequence, WIDTH * 1.35, HEIGHT * 1.1, { zIndex: 2, animationFPS: 20, oneShot: true  });
+    private idleSprite = new StandardSprite(this.context.graphics, this.body, this.context.assets.characterIdle, WIDTH, HEIGHT, [
+        { x: 0, y: 0, w: 290, h: 500},
+        { x: 290, y: 0, w: 290, h: 500},
+        { x: 290 * 2, y: 0, w: 290, h: 500},
+        { x: 290 * 3, y: 0, w: 290, h: 500},
+        { x: 290 * 4, y: 0, w: 290, h: 500},
+        { x: 290 * 5, y: 0, w: 290, h: 500},
+        { x: 290 * 6, y: 0, w: 290, h: 500},
+        { x: 290 * 7, y: 0, w: 290, h: 500},
+        { x: 290 * 8, y: 0, w: 290, h: 500},
+        { x: 290 * 9, y: 0, w: 290, h: 500},
+    ], { zIndex: 2, animationFPS: 12 });
+    private runSprite = new StandardSprite(this.context.graphics, this.body, this.context.assets.characterRun, WIDTH * 1.3, HEIGHT, [
+        { x: 0, y: 0, w: 376, h: 520},
+        { x: 376, y: 0, w: 376, h: 520},
+        { x: 376 * 2, y: 0, w: 376, h: 520},
+        { x: 376 * 3, y: 0, w: 376, h: 520},
+        { x: 376 * 4, y: 0, w: 376, h: 520},
+        { x: 376 * 5, y: 0, w: 376, h: 520},
+        { x: 376 * 6, y: 0, w: 376, h: 520},
+        { x: 376 * 7, y: 0, w: 376, h: 520},
+        { x: 376 * 8, y: 0, w: 376, h: 520},
+        { x: 376 * 9, y: 0, w: 376, h: 520},
+    ], { zIndex: 2, animationFPS: 20 });
+    private jumpSprite = new StandardSprite(this.context.graphics, this.body, this.context.assets.characterJump, WIDTH * 1.35, HEIGHT * 1.1, [
+        { x: 0, y: 0, w: 399, h: 543},
+        { x: 399, y: 0, w: 399, h: 543},
+        { x: 399 * 2, y: 0, w: 399, h: 543},
+        { x: 399 * 3, y: 0, w: 399, h: 543},
+        { x: 399 * 4, y: 0, w: 399, h: 543},
+        { x: 399 * 5, y: 0, w: 399, h: 543},
+    ], { zIndex: 2, animationFPS: 20, oneShot: true  });
 
     public sprite = this.idleSprite;
 
@@ -91,12 +76,15 @@ export class PlayerCharacter extends GameObject implements Portalizable, Sprite 
     private propeller = this.createPropeller();
     private motorJoint = this.createMotor();
 
+    private camera!: Camera;
+
     // private propellerSprite = new StandardSprite(this.propeller, this.context.assets.wallFull, 1, 1);
 
     private mouseCoords: [number, number] = [0, 0];
 
     init() {
         this.context.graphics.addSprite(this);
+        this.camera = this.context.graphics.createCamera();
         // this.context.graphics.addSprite(thids.propellerSprite);
         
         this.body.setPosition(planck.Vec2(11, 10));
@@ -121,7 +109,7 @@ export class PlayerCharacter extends GameObject implements Portalizable, Sprite 
             return;
         }
 
-        const camera = this.context.graphics.getMainCamera();
+        const camera = this.camera;
         camera.resetTransform();
         camera.translate(SCREEN_WIDTH/2, SCREEN_HEIGHT/2);
         if (this.mirror) {
@@ -152,6 +140,7 @@ export class PlayerCharacter extends GameObject implements Portalizable, Sprite 
             mat3.scale(this.sprite.transform, this.sprite.transform, vec2.fromValues(-1, 1));
         }
 
+        mat3.copy(PortalService.playerTransform, camera.transform);
         vec2.set(PortalService.playerPos, this.body.getPosition().x, this.body.getPosition().y);
     }
 

@@ -2,6 +2,7 @@ import { Assets } from "lib/assets";
 import { GameObject } from "./game-object";
 import * as planck from 'planck-js';
 import { PORTAL_PROJECTILE_CATEGORY } from "./projectile";
+import { StandardSprite } from "lib/graphics/standard-sprite";
 
 export class Wall extends GameObject<[number, number, number, number, number?]> {
 
@@ -22,8 +23,8 @@ export class Wall extends GameObject<[number, number, number, number, number?]> 
         this.height = height;
         this.angle = angle ?? 0;
 
-        this.createBody(this.context.physics.world);
-        // this.context.graphics.addSprite(this);
+        this.body = this.createBody(this.context.physics.world);
+        this.context.graphics.addSprite(new StandardSprite(this.context.graphics, this.body, this.context.assets.box, 1, 1, []));
     }
     
     private createBody(world: planck.World) {

@@ -1,10 +1,13 @@
-import { mat3, vec2 } from "gl-matrix";
+import { mat3, vec2, vec4 } from "gl-matrix";
 import { Camera } from "lib/graphics";
-import { PortalService } from "lib/PortalService";
-import { Sprite, StandardSprite } from "lib/sprite";
+import { PortalService, PORTAL_COLOR_1, PORTAL_COLOR_2 } from "lib/PortalService";
+import { Sprite } from "lib/graphics/sprite";
 import * as planck from "planck-js";
 import { Vec2 } from "planck-js";
 import { GameObject } from "./game-object";
+import { StandardSprite } from "lib/graphics/standard-sprite";
+import { Solid } from "lib/graphics/solid";
+import { rigidBodyTransform } from "lib/glutils";
 
 const WIDTH = 0.2;
 const HEIGHT = 2;
@@ -16,6 +19,8 @@ export interface IPortal {
     sensor: planck.Fixture;
     normal: Vec2;
     index: number;
+    camera: Camera;
+    sprite: Solid;
 }
 
 export interface PortalSurrogate {
@@ -196,8 +201,8 @@ export class Portal extends GameObject<void> implements Sprite {
 
     private updateCameras = () => {
         if (this.portal1 && this.portal2) {
-            this.updatePortalCamera(this.context.graphics.secondaryCamera, this.portal2, this.portal1);
-            this.updatePortalCamera(this.context.graphics.thirdCamera, this.portal1, this.portal2);
+            this.updatePortalCamera(this.portal1.camera, this.portal2, this.portal1);
+            this.updatePortalCamera(this.portal2.camera, this.portal1, this.portal2);
         }
     }
 
@@ -285,9 +290,11 @@ export class Portal extends GameObject<void> implements Sprite {
             shape: planck.Box(0.5, 0.1, Vec2(-0.55, HEIGHT/2 + 0.1)),
             userData: 'portal-gate'
         });
+        const camera = this.context.graphics.createCamera();
+        const sprite = new Solid(this.context.graphics.gl, this.context.graphics, 0.2, 2, vec4.fromValues(1.0, 0.0, 0.0, 1.0));
 
         return {
-            body, sensor, normal: Vec2(1, 0), index
+            body, sensor, normal: Vec2(1, 0), index, camera, sprite
         };
     }
 
@@ -319,10 +326,10 @@ export class Portal extends GameObject<void> implements Sprite {
 
     draw(gl: WebGLRenderingContext) {
         if (this.portal1) {
-            this.drawPortal(gl, this.portal1, '#01f6f2');
+            this.drawPortal(gl, this.portal1, PORTAL_COLOR_1);
         }
         if (this.portal2) {
-            this.drawPortal(gl, this.portal2, '#f5ef04');
+            this.drawPortal(gl, this.portal2, PORTAL_COLOR_2);
         }
         
         // if (!this.isDrawing && this.portal1 && this.portal2) {
@@ -363,7 +370,7 @@ export class Portal extends GameObject<void> implements Sprite {
         // // const angle = (PortalService.isMirror ? (angle1 - angle2 + 2 * Math.PI) : (angle1 - angle2 + Math.PI)) % (2 * Math.PI);
         // const angle = (PortalService.isMirror ? (angle1 - angle2 + Math.PI) : (angle1 - angle2 + Math.PI)) % (2 * Math.PI);
         camera.resetTransform();
-        mat3.copy(camera.transform, this.context.graphics.getMainCamera().transform);
+        mat3.copy(camera.transform, PortalService.playerTransform);
         camera.translate(srcPortal.body.getPosition().x, srcPortal.body.getPosition().y);
         camera.rotate(angle);
         if (PortalService.isMirror) {
@@ -372,42 +379,10 @@ export class Portal extends GameObject<void> implements Sprite {
         camera.translate(-dstPortal.body.getPosition().x, -dstPortal.body.getPosition().y);
     }
 
-    private renderPortalPerspective(camera: Camera, dstPortal: IPortal, srcPortal: IPortal) {
-
-        const srcNormal = vec2.fromValues(-srcPortal.normal.x, -srcPortal.normal.y);
-        const dstNormal = vec2.fromValues(dstPortal.normal.x, dstPortal.normal.y);
-        if (PortalService.isMirror) {
-            vec2.mul(dstNormal, dstNormal, vec2.fromValues(-1, 1));
-        }
-        const angle = Math.atan2(srcNormal[1], srcNormal[0]) - Math.atan2(dstNormal[1], dstNormal[0]);
-
-
-        // let angle1 = dstPortal.body.getAngle();
-        // let angle2 = srcPortal.body.getAngle();
-
-        // if (PortalService.isMirror) {
-        //     let vAngle1 = vec2.fromValues(Math.cos(angle1), Math.sin(angle1));
-        //     let vAngle2 = vec2.fromValues(Math.cos(angle2), Math.sin(angle2));
-        //     let vTemp = vec2.fromValues(vAngle1[0], vAngle1[1]);
-        //     angle1 = vec2.angle(vTemp, vec2.fromValues(1, 0));
-        //     vTemp = vec2.fromValues(-vAngle2[0], vAngle2[1]);
-        //     angle2 = vec2.angle(vTemp, vec2.fromValues(1, 0));
-        // }
-        
-        // // const angle = (PortalService.isMirror ? (angle1 - angle2 + 2 * Math.PI) : (angle1 - angle2 + Math.PI)) % (2 * Math.PI);
-        // const angle = (PortalService.isMirror ? (angle1 - angle2 + Math.PI) : (angle1 - angle2 + Math.PI)) % (2 * Math.PI);
-        camera.resetTransform();
-        mat3.copy(camera.transform, this.context.graphics.getMainCamera().transform);
-        camera.translate(srcPortal.body.getPosition().x, srcPortal.body.getPosition().y);
-        camera.rotate(angle);
-        if (PortalService.isMirror) {
-            mat3.scale(camera.transform, camera.transform, vec2.fromValues(-1.0, 1.0));
-        }
-        camera.translate(-dstPortal.body.getPosition().x, -dstPortal.body.getPosition().y);
-        this.context.graphics.render(camera);
-    }
-
-    private drawPortal(gl: WebGLRenderingContext, portal: IPortal, color: string) {
+    private drawPortal(gl: WebGLRenderingContext, portal: IPortal, color: vec4) {
+        portal.sprite.color = color;
+        rigidBodyTransform(portal.sprite.transform, portal.body);
+        portal.sprite.draw(gl);
         // ctx.save();
         // ctx.fillStyle = color;
         // ctx.translate(portal.body.getPosition().x, portal.body.getPosition().y);

@@ -1,4 +1,8 @@
-import { Sprite } from 'lib/sprite';
+import { vec4 } from 'gl-matrix';
+import { rigidBodyTransform } from 'lib/glutils';
+import { Solid } from 'lib/graphics/solid';
+import { Sprite } from 'lib/graphics/sprite';
+import { PORTAL_COLOR_1, PORTAL_COLOR_2 } from 'lib/PortalService';
 import { Chain, Circle, Contact, Edge, Shape, Vec2 } from 'planck-js';
 
 import { GameObject } from './game-object';
@@ -41,14 +45,13 @@ export class Projectile extends GameObject<ProjectileProps> implements Sprite {
         gravityScale: 0
     });
 
-    private color: string = '#000';
+    private solid!: Solid;
+
+    private color!: vec4;
 
     draw(gl: WebGLRenderingContext): void {
-        // ctx.translate(this.body.getPosition().x, this.body.getPosition().y);
-        // ctx.beginPath();
-        // ctx.fillStyle = this.color;
-        // ctx.ellipse(0, 0, RADIUS, RADIUS, 0, 0, Math.PI * 2);
-        // ctx.fill();
+        rigidBodyTransform(this.solid.transform, this.body);
+        this.solid.draw(gl);
     }
 
     zIndex = 3;
@@ -113,7 +116,8 @@ export class Projectile extends GameObject<ProjectileProps> implements Sprite {
             userData: this,
             density: 0.01
         });
-        this.color = props.type === 1 ? '#01f6f2' : '#f5ef04';
+        this.color = props.type === 1 ? PORTAL_COLOR_1 : PORTAL_COLOR_2;
+        this.solid = new Solid(this.context.graphics.gl, this.context.graphics, 0.2, 0.2, this.color);
         this.body.setPosition(props.position);
         this.body.setLinearVelocity(props.direction);
         this.context.graphics.addSprite(this);

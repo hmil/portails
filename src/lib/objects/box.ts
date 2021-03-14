@@ -1,9 +1,8 @@
-import { StandardSprite } from 'lib/sprite';
+import { StandardSprite } from 'lib/graphics/standard-sprite';
 import * as planck from 'planck-js';
 
 import { GameObject } from './game-object';
 import { initPortalSurrogate, Portalizable } from './portal';
-import { PORTAL_PROJECTILE_CATEGORY } from './projectile';
 
 export class Box extends GameObject<[number, number]> implements Portalizable {
 

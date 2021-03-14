@@ -1,4 +1,4 @@
-import { Sprite } from 'lib/sprite';
+import { Sprite } from 'lib/graphics/sprite';
 
 import { GameObject } from './game-object';
 

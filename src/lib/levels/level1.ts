@@ -1,9 +1,9 @@
 import { vec2 } from 'gl-matrix';
+import { StandardSprite } from 'lib/graphics/standard-sprite';
 import { Barrel } from 'lib/objects/barrel';
 import { Box } from 'lib/objects/box';
 import { GameObject } from 'lib/objects/game-object';
 import { PORTAL_PROJECTILE_CATEGORY } from 'lib/objects/projectile';
-import { StandardSprite } from 'lib/sprite';
 import { Chain, Vec2 } from 'planck-js';
 
 const SCALING = 64;
