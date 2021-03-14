@@ -5,7 +5,7 @@ uniform sampler2D uSecondaryCamera;
 uniform sampler2D uThirdCamera;
 uniform sampler2D uPerlinNoise;
 
-uniform mat3 uViewMatrix;
+uniform vec2 uCharacterPos;
 uniform vec2 uPortal1Origin;
 uniform vec2 uPortal1Normal;
 uniform vec2 uPortal2Origin;
@@ -28,10 +28,6 @@ vec2 rotate90(in vec2 vec) {
 }
 vec2 rotate270(in vec2 vec) {
     return vec2(-vec.y, vec.x);
-}
-
-vec2 displayToWorldCoordinates(in vec2 displayCoords) {
-    return vec2(uViewMatrix * vec3(displayCoords, 1.0));
 }
 
 /**
@@ -120,9 +116,9 @@ float getGroundHeight(vec2 characterPos) {
 }
 
 void main() {
-    vec2 characterPos = displayToWorldCoordinates(uScreenSize / 2.0);
-    float height1 = getPortalZ(characterPos, uPortal1Origin, uPortal1Normal);
-    float height2 = getPortalZ(characterPos, uPortal2Origin, uPortal2Normal);
+    // gl_FragColor = vec4((vWorldCoord - uCharacterPos) / 32.0, 0.0, 1.0);
+    float height1 = getPortalZ(uCharacterPos, uPortal1Origin, uPortal1Normal);
+    float height2 = getPortalZ(uCharacterPos, uPortal2Origin, uPortal2Normal);
 
     // Shortcuts, avoid useless texture lookups and noise computations
     if (height1 == 0.0 && height2 == 0.0) {
@@ -132,8 +128,8 @@ void main() {
     } else if (height2 == 1.0) {
         gl_FragColor = texture2D(uThirdCamera, vUv);
     } else if (height1 > height2) {
-        gl_FragColor = getPortalSample(height1 - getGroundHeight(characterPos), uPortal1Origin - characterPos, uPortal1Normal, uSecondaryCamera, portal1Color, portal2Color);
+        gl_FragColor = getPortalSample(height1 - getGroundHeight(uCharacterPos), uPortal1Origin - uCharacterPos, uPortal1Normal, uSecondaryCamera, portal1Color, portal2Color);
     } else {
-        gl_FragColor = getPortalSample(height2 - 1.0 + getGroundHeight(characterPos), uPortal2Origin - characterPos, uPortal2Normal, uThirdCamera, portal2Color, portal1Color);
+        gl_FragColor = getPortalSample(height2 - 1.0 + getGroundHeight(uCharacterPos), uPortal2Origin - uCharacterPos, uPortal2Normal, uThirdCamera, portal2Color, portal1Color);
     }
 }

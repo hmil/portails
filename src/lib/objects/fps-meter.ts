@@ -7,11 +7,11 @@ export class FpsMeter extends GameObject implements Sprite {
     private lastTime = 0;
     private delta = 1;
 
-    draw(ctx: CanvasRenderingContext2D): void {
-        ctx.resetTransform();
-        ctx.fillStyle = '#f00';
-        ctx.font = '50px sans-serif';
-        ctx.fillText(`Fps: ${Math.round(1000 / this.delta)}`, 10, 80);
+    draw(gl: WebGLRenderingContext): void {
+        // ctx.resetTransform();
+        // ctx.fillStyle = '#f00';
+        // ctx.font = '50px sans-serif';
+        // ctx.fillText(`Fps: ${Math.round(1000 / this.delta)}`, 10, 80);
     }
 
     zIndex = 4;

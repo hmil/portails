@@ -18,7 +18,9 @@ export class Barrel extends GameObject<[number, number]> implements Portalizable
 
     readonly zIndex = 2;
 
-    public sprite = new StandardSprite(this.body, this.context.assets.barrel, this.width, this.height, { zIndex: 2 });
+    public sprite = new StandardSprite(this.context.graphics, this.body, this.context.assets.barrel, this.width, this.height, [{
+        x: 0, y: 0, w: 177, h: 238
+    }], { zIndex: 2 });
 
     public init([x, y]: [number, number]) {
         this.x = x;

@@ -43,12 +43,12 @@ export class Projectile extends GameObject<ProjectileProps> implements Sprite {
 
     private color: string = '#000';
 
-    draw(ctx: CanvasRenderingContext2D): void {
-        ctx.translate(this.body.getPosition().x, this.body.getPosition().y);
-        ctx.beginPath();
-        ctx.fillStyle = this.color;
-        ctx.ellipse(0, 0, RADIUS, RADIUS, 0, 0, Math.PI * 2);
-        ctx.fill();
+    draw(gl: WebGLRenderingContext): void {
+        // ctx.translate(this.body.getPosition().x, this.body.getPosition().y);
+        // ctx.beginPath();
+        // ctx.fillStyle = this.color;
+        // ctx.ellipse(0, 0, RADIUS, RADIUS, 0, 0, Math.PI * 2);
+        // ctx.fill();
     }
 
     zIndex = 3;

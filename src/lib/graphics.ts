@@ -2,6 +2,7 @@ import { Assets } from "./assets";
 import { Sprite } from "./sprite";
 import { mat3, mat4, vec2, vec3 } from 'gl-matrix';
 import { PortalService } from "./PortalService";
+import { loadProgram } from "./glutils";
 
 export const SCREEN_WIDTH = 20;
 export const SCREEN_HEIGHT = 9;
@@ -10,10 +11,13 @@ const PERLIN_SIZE = 64;
 
 export class Camera {
 
+    public readonly pvMatrix: mat4 = mat4.create();
     public readonly transform: mat3 = mat3.create();
     private angle: number = 0;
 
-    constructor(public readonly ctx: CanvasRenderingContext2D) { }
+    constructor(public readonly gl: WebGLRenderingContext,
+                public readonly buffer: WebGLFramebuffer,
+                public readonly texture: WebGLTexture) { }
 
     public resetTransform() {
         mat3.identity(this.transform);
@@ -31,16 +35,6 @@ export class Camera {
     public rotate(alpha: number) {
         this.angle = alpha;
         mat3.rotate(this.transform, this.transform, alpha);
-    }
-
-    public project() {
-        this.ctx.transform(this.transform[0], this.transform[1], this.transform[3], this.transform[4], this.transform[6], this.transform[7]);
-    }
-}
-
-export class OffscreenCamera extends Camera {
-    constructor(public readonly canvas: CanvasRenderingContext2D) {
-        super(canvas);
     }
 }
 
@@ -61,6 +55,8 @@ export class Graphics {
     public secondaryCamera: Camera;
     public thirdCamera: Camera;
 
+    public pvMatrix = mat4.create();
+
     private buffers: { [k: string]: WebGLBuffer };
     private programInfo: {
         program: WebGLProgram;
@@ -80,6 +76,7 @@ export class Graphics {
             uViewMatrix: WebGLUniformLocation;
             uTime: WebGLUniformLocation;
             uPerlinNoise: WebGLUniformLocation;
+            uCharacterPos: WebGLUniformLocation;
         };
     };
     private texture: WebGLTexture;
@@ -103,21 +100,7 @@ export class Graphics {
         this.resizeCanvasToDisplaySize();
 
         // Init shader program
-        const vertexShader = this.loadShader(gl, gl.VERTEX_SHADER, require('./shaders/vertex.glsl').default);
-        const fragmentShader = this.loadShader(gl, gl.FRAGMENT_SHADER, require('./shaders/fragment.glsl').default);
-        const shaderProgram = gl.createProgram();
-        if (shaderProgram == null) {
-            throw new Error('Cant initialize shader');
-        }
-        gl.attachShader(shaderProgram, vertexShader);
-        gl.attachShader(shaderProgram, fragmentShader);
-        gl.linkProgram(shaderProgram);
-
-        // If creating the shader program failed, alert
-
-        if (!gl.getProgramParameter(shaderProgram, gl.LINK_STATUS)) {
-            throw new Error('Unable to initialize the shader program: ' + gl.getProgramInfoLog(shaderProgram));
-        }
+        const shaderProgram = loadProgram(gl, require('./shaders/post.vert.glsl').default, require('./shaders/post.frag.glsl').default);
 
         this.programInfo = {
             program: shaderProgram,
@@ -137,6 +120,7 @@ export class Graphics {
                 uViewMatrix: gl.getUniformLocation(shaderProgram, 'uViewMatrix')!,
                 uTime: gl.getUniformLocation(shaderProgram, 'uTime')!,
                 uPerlinNoise: gl.getUniformLocation(shaderProgram, 'uPerlinNoise')!,
+                uCharacterPos: gl.getUniformLocation(shaderProgram, 'uCharacterPos')!,
             },
         };
 
@@ -208,31 +192,6 @@ export class Graphics {
         return buffer;
     }
 
-    private loadShader(gl: WebGLRenderingContext, type: number, source: string) {
-        const shader = gl.createShader(type);
-        if (shader == null) {
-            throw new Error('Failed to create shader');
-        }
-      
-        // Send the source to the shader object
-      
-        gl.shaderSource(shader, source);
-      
-        // Compile the shader program
-      
-        gl.compileShader(shader);
-      
-        // See if it compiled successfully
-      
-        if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-            const error = gl.getShaderInfoLog(shader);
-            gl.deleteShader(shader);
-            throw new Error(String(error));
-        }
-      
-        return shader;
-    }
-
     public addSprite(sprite: Sprite): void {
         const z = sprite.zIndex ?? 1;
 
@@ -275,36 +234,40 @@ export class Graphics {
         return this.mainCamera;
     }
 
-    public createCamera(): OffscreenCamera {
-        return new OffscreenCamera(this.createOffscreenCanvas());
-    }
-
-    private createOffscreenCanvas() {
-        // Experimental API, not yet available
-        // const canvas = new OffscreenCanvas(this.width, this.height)
-        const canvas = document.createElement('canvas');
-        canvas.width = this.width;
-        canvas.height = this.height;
-        const ctx = canvas.getContext('2d');
-        if (ctx == null) {
-            throw new Error('Cannot initialize canvas');
+    public createCamera() {
+        const gl = this.gl;
+        const buffer = gl.createFramebuffer();
+        const renderTexture = gl.createTexture();
+        if (buffer == null || renderTexture == null) {
+            throw new Error('Could not create render buffer or texture.');
         }
-        return ctx;
+        gl.bindTexture(gl.TEXTURE_2D, renderTexture);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, this.width, this.height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+        gl.bindFramebuffer(gl.FRAMEBUFFER, buffer);
+        gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, renderTexture, 0);
+        return new Camera(this.gl, buffer, renderTexture);
     }
 
-    private i = 0;
     public draw() {
         this.resizeCanvasToDisplaySize();
         this.render(this.getMainCamera());
+        this.render(this.secondaryCamera);
+        this.render(this.thirdCamera);
 
+        // const gl = this.gl;
+        // // Set clear color to black, fully opaque
+        // gl.clearColor(0.0, 0.0, 0.0, 1.0);
+
+        // gl.enable(gl.DEPTH_TEST);           // Enable depth testing
+        // gl.depthFunc(gl.LEQUAL);
         const gl = this.gl;
-        // Set clear color to black, fully opaque
-        gl.clearColor(0.0, 0.0, 0.0, 1.0);
 
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+        gl.bindRenderbuffer(gl.RENDERBUFFER, null);
         gl.clearDepth(1.0);                 // Clear everything
-        gl.enable(gl.DEPTH_TEST);           // Enable depth testing
-        gl.depthFunc(gl.LEQUAL);
-
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
         const zNear = 0.1;
@@ -351,37 +314,35 @@ export class Graphics {
         // Tell WebGL to use our program when drawing
         gl.useProgram(this.programInfo.program);
 
-        gl.activeTexture(gl.TEXTURE0);
-        gl.bindTexture(gl.TEXTURE_2D, this.texture);
-        gl.uniform1i(this.programInfo.uniformLocations.uSecondCamera, 0);
-        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, this.getMainCamera().ctx.canvas);
-        gl.activeTexture(gl.TEXTURE1);
-        gl.bindTexture(gl.TEXTURE_2D, this.texture2);
-        gl.uniform1i(this.programInfo.uniformLocations.uSecondCamera, 1);
-        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, this.secondaryCamera.ctx.canvas);
-        gl.activeTexture(gl.TEXTURE2);
-        gl.bindTexture(gl.TEXTURE_2D, this.texture3);
-        gl.uniform1i(this.programInfo.uniformLocations.uThirdCamera, 2);
-        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, this.thirdCamera.ctx.canvas);
-
         const transform = this.getMainCamera().transform;
+
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, this.getMainCamera().texture);
+        gl.uniform1i(this.programInfo.uniformLocations.uSecondCamera, 0);
+        gl.activeTexture(gl.TEXTURE1);
+        gl.bindTexture(gl.TEXTURE_2D, this.secondaryCamera.texture);
+        gl.uniform1i(this.programInfo.uniformLocations.uSecondCamera, 1);
+        gl.activeTexture(gl.TEXTURE2);
+        gl.bindTexture(gl.TEXTURE_2D, this.thirdCamera.texture);
+        gl.uniform1i(this.programInfo.uniformLocations.uThirdCamera, 2);
     
         gl.uniform2f(this.programInfo.uniformLocations.portal1Normal, PortalService.portal1Normal[0], PortalService.portal1Normal[1]);
         gl.uniform2f(this.programInfo.uniformLocations.portal1Origin, PortalService.portal1Position[0], PortalService.portal1Position[1]);
         gl.uniform2f(this.programInfo.uniformLocations.portal2Normal, PortalService.portal2Normal[0], PortalService.portal2Normal[1]);
         gl.uniform2f(this.programInfo.uniformLocations.portal2Origin, PortalService.portal2Position[0], PortalService.portal2Position[1]);
         gl.uniform1f(this.programInfo.uniformLocations.uTime, Date.now() % 16000);
+        gl.uniform2f(this.programInfo.uniformLocations.uCharacterPos, PortalService.playerPos[0], PortalService.playerPos[1]);
 
         gl.activeTexture(gl.TEXTURE3);
         gl.bindTexture(gl.TEXTURE_2D, this.perlinTexture);
         gl.uniform1i(this.programInfo.uniformLocations.uPerlinNoise, 3);
 
-        const view = mat3.create();
-        mat3.mul(view, this.displayMatrix, transform);
-        if (!mat3.invert(view, view)) {
+        const view = mat4.create();
+        // mat3.mul(view, this.displayMatrix, transform);
+        if (!mat4.invert(view, this.getMainCamera().pvMatrix)) {
             throw new Error('Cant inverse matrix');
         }
-        gl.uniformMatrix3fv(this.programInfo.uniformLocations.uViewMatrix, false, view);
+        gl.uniformMatrix4fv(this.programInfo.uniformLocations.uViewMatrix, false, view);
 
         gl.uniform2f(this.programInfo.uniformLocations.uScreenSize, this.width, this.height);
 
@@ -393,20 +354,33 @@ export class Graphics {
     }
 
     public render(camera: Camera): void {
+        const transform = camera.transform;
+        const view = mat3.create();
+        mat3.scale(view, view, vec2.fromValues(1/SCREEN_WIDTH, 1/SCREEN_HEIGHT));
+        mat3.mul(view, view, transform);
+        const projectionMatrix = mat4.create();
+        const zNear = 0.1;
+        const zFar = 100.0;
+        mat4.ortho(projectionMatrix, -(this.width/this.height)/4, (this.width/this.height)/4, -0.5, 0.5, zNear, zFar);
 
-        camera.ctx.resetTransform();
-        camera.ctx.fillStyle = '#141a20';
-        camera.ctx.fillRect(0, 0, this.width, this.height);
+        const viewMatrix = mat4.create();
+        mat4.lookAt(viewMatrix, vec3.fromValues(0.5, 0.5, -1.0), vec3.fromValues(0.5, 0.5, 0), vec3.fromValues(0, -1, 0));
+        mat4.mul(viewMatrix, viewMatrix, mat4.fromValues(view[0], view[1], 0.0, view[2], view[3], view[4], 0.0, view[5], 0, 0, 1, 0, view[6], view[7], 0.0, view[8]));
+        mat4.mul(this.pvMatrix, projectionMatrix, viewMatrix);
+        mat4.copy(camera.pvMatrix, this.pvMatrix);
 
-        const m = mat3.multiply(mat3.create(), this.displayMatrix, camera.transform);
-        camera.ctx.transform(m[0], m[1], m[3], m[4], m[6], m[7]);
-        camera.ctx.strokeStyle = '#fff';
-        camera.ctx.lineWidth = 0.05;
+        const gl = this.gl;
+        gl.bindFramebuffer(gl.FRAMEBUFFER, camera.buffer);
+        gl.clearColor(0.0, 0.0, 0.0, 1.0);
+        gl.disable(gl.DEPTH_TEST);
+        gl.enable(gl.BLEND);
+        gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+        gl.clearDepth(1.0);
+
         for (const bucket of this.sprites) {
             for (const sprite of bucket) {
-                camera.ctx.save();
-                sprite.draw(camera.ctx);
-                camera.ctx.restore();
+                sprite.draw(camera.gl);
             }
         }
     }

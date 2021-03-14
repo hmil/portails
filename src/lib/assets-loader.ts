@@ -7,28 +7,28 @@ export interface AssetImage {
     height: number;
 }
 
+export interface ImageFrame {
+    x: number;
+    y: number;
+    w: number;
+    h: number;
+}
+
 export interface ImageSprite {
-    draw(ctx: CanvasRenderingContext2D, x: number, y: number, width: number, height: number): void;
+    imageData: TexImageSource;
+    frames: ReadonlyArray<ImageFrame>;
 }
 
 export function image(src: string, x: number, y: number, width: number, height: number): AssetImage {
     return {src, x, y, width, height};
 }
 
-type LoadedAsset<T> = T extends AssetImage ? ImageSprite : never;
+type LoadedAsset<T> = T extends AssetImage ? TexImageSource : never;
 export type LoadedAssets<T> = {
     [k in keyof T]: LoadedAsset<T[k]>;
 }
 
 type Library = {[k: string]: AssetImage};
-
-function makeImageSprite(image: HTMLImageElement, asset: AssetImage): ImageSprite {
-    return {
-        draw(ctx: CanvasRenderingContext2D, x: number, y: number, width: number, height: number) {
-            ctx.drawImage(image, asset.x, asset.y, asset.width, asset.height, x, y, width, height)
-        }
-    }
-}
 
 export class AssetsLoader {
 
@@ -42,7 +42,7 @@ export class AssetsLoader {
         .map(([k, v]) => this.loadImage(v.src).then(img => [k, img, v] as const)));
 
         return loaded.reduce((acc, [k, image, sprite]) => {
-            acc[k] = makeImageSprite(image, sprite);
+            acc[k] = image;
             return acc;
         }, {} as any)
     }

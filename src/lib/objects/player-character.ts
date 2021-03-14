@@ -65,9 +65,18 @@ export class PlayerCharacter extends GameObject implements Portalizable, Sprite 
         this.context.assets.characterJump5
     ];
 
-    private idleSprite = new StandardSprite(this.body, this.idleAnimationSequence, WIDTH, HEIGHT, { zIndex: 2, animationFPS: 12 });
-    private runSprite = new StandardSprite(this.body, this.runAnimationSequence, WIDTH * 1.3, HEIGHT, { zIndex: 2, animationFPS: 20 });
-    private jumpSprite = new StandardSprite(this.body, this.jumpAnimationSequence, WIDTH * 1.35, HEIGHT * 1.1, { zIndex: 2, animationFPS: 20, oneShot: true  });
+    private idleSprite = new StandardSprite(this.context.graphics, this.body, this.context.assets.character0, WIDTH, HEIGHT, [{
+        x: 0, y: 0, w: 290, h: 500
+    }], { zIndex: 2, animationFPS: 12 });
+    private runSprite = new StandardSprite(this.context.graphics, this.body, this.context.assets.characterRun0, WIDTH * 1.3, HEIGHT, [{
+        x: 0, y: 0, w: 370, h: 520
+    }], { zIndex: 2, animationFPS: 20 });
+    private jumpSprite = new StandardSprite(this.context.graphics, this.body, this.context.assets.characterJump0, WIDTH * 1.35, HEIGHT * 1.1, [{
+        x: 0, y: 0, w: 399, h: 543
+    }], { zIndex: 2, animationFPS: 20, oneShot: true  });
+    // private idleSprite = new StandardSprite(this.body, this.idleAnimationSequence, WIDTH, HEIGHT, { zIndex: 2, animationFPS: 12 });
+    // private runSprite = new StandardSprite(this.body, this.runAnimationSequence, WIDTH * 1.3, HEIGHT, { zIndex: 2, animationFPS: 20 });
+    // private jumpSprite = new StandardSprite(this.body, this.jumpAnimationSequence, WIDTH * 1.35, HEIGHT * 1.1, { zIndex: 2, animationFPS: 20, oneShot: true  });
 
     public sprite = this.idleSprite;
 
@@ -82,7 +91,7 @@ export class PlayerCharacter extends GameObject implements Portalizable, Sprite 
     private propeller = this.createPropeller();
     private motorJoint = this.createMotor();
 
-    private propellerSprite = new StandardSprite(this.propeller, this.context.assets.wallFull, 1, 1);
+    // private propellerSprite = new StandardSprite(this.propeller, this.context.assets.wallFull, 1, 1);
 
     private mouseCoords: [number, number] = [0, 0];
 
@@ -99,7 +108,7 @@ export class PlayerCharacter extends GameObject implements Portalizable, Sprite 
         window.addEventListener('mousedown', this.onMouseDown);
 
         this.on('before-physics', this.update);
-        this.on('before-render', this.trackView);
+        this.on('after-physics', this.trackView);
     }
 
     public onPortal() {
@@ -142,6 +151,8 @@ export class PlayerCharacter extends GameObject implements Portalizable, Sprite 
         if (this.mirror ? this.direction === 'right' : this.direction === 'left') {
             mat3.scale(this.sprite.transform, this.sprite.transform, vec2.fromValues(-1, 1));
         }
+
+        vec2.set(PortalService.playerPos, this.body.getPosition().x, this.body.getPosition().y);
     }
 
     private update = () => {
@@ -255,8 +266,8 @@ export class PlayerCharacter extends GameObject implements Portalizable, Sprite 
         this.direction = direction;
     }
 
-    draw(ctx: CanvasRenderingContext2D): void {
-        this.sprite.draw(ctx);
+    draw(gl: WebGLRenderingContext): void {
+        this.sprite.draw(gl);
     }
 
     private onMouseMove = (evt: MouseEvent) => {

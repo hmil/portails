@@ -38,7 +38,7 @@ export function isPortalizable(p: unknown): p is Portalizable {
     return typeof p === 'object' && p != null && 'portalSurrogate' in p;
 }
 
-export class Portal extends GameObject<void> {
+export class Portal extends GameObject<void> implements Sprite {
 
     public body?: planck.Body;
 
@@ -102,6 +102,7 @@ export class Portal extends GameObject<void> {
 
         this.on('after-physics', this.update);
         this.on('after-render', this.cleanup);
+        this.on('before-render', this.updateCameras);
     }
 
     private stopPortal(body: planck.Body, portal: IPortal) {
@@ -193,19 +194,26 @@ export class Portal extends GameObject<void> {
         }
     }
 
+    private updateCameras = () => {
+        if (this.portal1 && this.portal2) {
+            this.updatePortalCamera(this.context.graphics.secondaryCamera, this.portal2, this.portal1);
+            this.updatePortalCamera(this.context.graphics.thirdCamera, this.portal1, this.portal2);
+        }
+    }
+
     private createSurrogate(portalizable: Portalizable): PortalSurrogate {
         const body = portalizable.createBody();
         body.setUserData('portal-surrogate');
         const sprite: Sprite = {
             get zIndex() { return portalizable.sprite.zIndex; },
-            draw(ctx: CanvasRenderingContext2D) {
+            draw(gl: WebGLRenderingContext) {
                 const oldBody = portalizable.sprite.body;
                 portalizable.sprite.body = body;
                 const savedTrsfm = portalizable.sprite.transform;
                 if (PortalService.isMirror) {
                     portalizable.sprite.transform = mat3.scale(mat3.create(), portalizable.sprite.transform, vec2.fromValues(-1, 1));
                 }
-                portalizable.sprite.draw(ctx);
+                portalizable.sprite.draw(gl);
 
                 portalizable.sprite.transform = savedTrsfm;
                 portalizable.sprite.body = oldBody;
@@ -309,25 +317,59 @@ export class Portal extends GameObject<void> {
         vec2.set(PortalService.portal2Normal, normal.x, normal.y);
     }
 
-    draw(ctx: CanvasRenderingContext2D) {
+    draw(gl: WebGLRenderingContext) {
         if (this.portal1) {
-            this.drawPortal(ctx, this.portal1, '#01f6f2');
+            this.drawPortal(gl, this.portal1, '#01f6f2');
         }
         if (this.portal2) {
-            this.drawPortal(ctx, this.portal2, '#f5ef04');
+            this.drawPortal(gl, this.portal2, '#f5ef04');
         }
         
-        if (!this.isDrawing && this.portal1 && this.portal2) {
-            this.isDrawing = true;
-            this.renderPortalPerspective(this.context.graphics.secondaryCamera, this.portal2, this.portal1);
-            this.renderPortalPerspective(this.context.graphics.thirdCamera, this.portal1, this.portal2);
-            // ctx.save();
-            // ctx.resetTransform();
-            // ctx.globalAlpha = 0.5;
-            // ctx.drawImage(this.camera.canvas, 0, 0, this.camera.canvas.width, this.camera.canvas.height);
-            // ctx.restore();
-            this.isDrawing = false;
+        // if (!this.isDrawing && this.portal1 && this.portal2) {
+        //     this.isDrawing = true;
+        //     this.renderPortalPerspective(this.context.graphics.secondaryCamera, this.portal2, this.portal1);
+        //     this.renderPortalPerspective(this.context.graphics.thirdCamera, this.portal1, this.portal2);
+        //     // ctx.save();
+        //     // ctx.resetTransform();
+        //     // ctx.globalAlpha = 0.5;
+        //     // ctx.drawImage(this.camera.canvas, 0, 0, this.camera.canvas.width, this.camera.canvas.height);
+        //     // ctx.restore();
+        //     this.isDrawing = false;
+        // }
+    }
+
+    private updatePortalCamera(camera: Camera, dstPortal: IPortal, srcPortal: IPortal) {
+
+        const srcNormal = vec2.fromValues(-srcPortal.normal.x, -srcPortal.normal.y);
+        const dstNormal = vec2.fromValues(dstPortal.normal.x, dstPortal.normal.y);
+        if (PortalService.isMirror) {
+            vec2.mul(dstNormal, dstNormal, vec2.fromValues(-1, 1));
         }
+        const angle = Math.atan2(srcNormal[1], srcNormal[0]) - Math.atan2(dstNormal[1], dstNormal[0]);
+
+
+        // let angle1 = dstPortal.body.getAngle();
+        // let angle2 = srcPortal.body.getAngle();
+
+        // if (PortalService.isMirror) {
+        //     let vAngle1 = vec2.fromValues(Math.cos(angle1), Math.sin(angle1));
+        //     let vAngle2 = vec2.fromValues(Math.cos(angle2), Math.sin(angle2));
+        //     let vTemp = vec2.fromValues(vAngle1[0], vAngle1[1]);
+        //     angle1 = vec2.angle(vTemp, vec2.fromValues(1, 0));
+        //     vTemp = vec2.fromValues(-vAngle2[0], vAngle2[1]);
+        //     angle2 = vec2.angle(vTemp, vec2.fromValues(1, 0));
+        // }
+        
+        // // const angle = (PortalService.isMirror ? (angle1 - angle2 + 2 * Math.PI) : (angle1 - angle2 + Math.PI)) % (2 * Math.PI);
+        // const angle = (PortalService.isMirror ? (angle1 - angle2 + Math.PI) : (angle1 - angle2 + Math.PI)) % (2 * Math.PI);
+        camera.resetTransform();
+        mat3.copy(camera.transform, this.context.graphics.getMainCamera().transform);
+        camera.translate(srcPortal.body.getPosition().x, srcPortal.body.getPosition().y);
+        camera.rotate(angle);
+        if (PortalService.isMirror) {
+            mat3.scale(camera.transform, camera.transform, vec2.fromValues(-1.0, 1.0));
+        }
+        camera.translate(-dstPortal.body.getPosition().x, -dstPortal.body.getPosition().y);
     }
 
     private renderPortalPerspective(camera: Camera, dstPortal: IPortal, srcPortal: IPortal) {
@@ -365,20 +407,20 @@ export class Portal extends GameObject<void> {
         this.context.graphics.render(camera);
     }
 
-    private drawPortal(ctx: CanvasRenderingContext2D, portal: IPortal, color: string) {
-        ctx.save();
-        ctx.fillStyle = color;
-        ctx.translate(portal.body.getPosition().x, portal.body.getPosition().y);
-        ctx.rotate(portal.body.getAngle());
-        ctx.fillRect(-WIDTH/2, -(HEIGHT - 0.2)/2, WIDTH, (HEIGHT - 0.2));
+    private drawPortal(gl: WebGLRenderingContext, portal: IPortal, color: string) {
+        // ctx.save();
+        // ctx.fillStyle = color;
+        // ctx.translate(portal.body.getPosition().x, portal.body.getPosition().y);
+        // ctx.rotate(portal.body.getAngle());
+        // ctx.fillRect(-WIDTH/2, -(HEIGHT - 0.2)/2, WIDTH, (HEIGHT - 0.2));
 
-        // ctx.lineWidth = 0.05;
-        // ctx.strokeRect(-1.05, -HEIGHT/2 - 0.2, 1, 0.2);
-        // ctx.strokeRect(-1.05, HEIGHT/2, 1, 0.2);
-        // ctx.fillStyle = '#ec2';
-        // ctx.globalAlpha = 0.4;
-        // ctx.fillRect(-1, -HEIGHT/2, 1, HEIGHT);
-        // ctx.globalAlpha = 1;
-        ctx.restore();
+        // // ctx.lineWidth = 0.05;
+        // // ctx.strokeRect(-1.05, -HEIGHT/2 - 0.2, 1, 0.2);
+        // // ctx.strokeRect(-1.05, HEIGHT/2, 1, 0.2);
+        // // ctx.fillStyle = '#ec2';
+        // // ctx.globalAlpha = 0.4;
+        // // ctx.fillRect(-1, -HEIGHT/2, 1, HEIGHT);
+        // // ctx.globalAlpha = 1;
+        // ctx.restore();
     }
 }

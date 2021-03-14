@@ -1,7 +1,9 @@
+import { vec2 } from 'gl-matrix';
 import { Barrel } from 'lib/objects/barrel';
 import { Box } from 'lib/objects/box';
 import { GameObject } from 'lib/objects/game-object';
 import { PORTAL_PROJECTILE_CATEGORY } from 'lib/objects/projectile';
+import { StandardSprite } from 'lib/sprite';
 import { Chain, Vec2 } from 'planck-js';
 
 const SCALING = 64;
@@ -81,17 +83,18 @@ export class Level1 extends GameObject {
                 toWorld(Vec2(739.034, 84.555)),
             ])
         });
-        this.context.graphics.addSprite({
-            zIndex: 1,
-            draw: (ctx) => {
-                this.context.assets.background.draw(ctx, 0, 0, 2308 / 64, 1218 / 64);
-            }
-        });
-        this.context.graphics.addSprite({
-            zIndex: 3,
-            draw: (ctx) => {
-                this.context.assets.foreground.draw(ctx, 0, 0, 2308 / 64, 1218 / 64);
-            }
-        });
+
+        const wallpaperWidth = 2308 / 64;
+        const wallpaperHeight = 1218 / 64;
+        this.context.graphics.addSprite(
+            new StandardSprite(this.context.graphics, terrain, this.context.assets.foreground, wallpaperWidth, wallpaperHeight, [], {
+                zIndex: 3,
+                offset: vec2.fromValues(wallpaperWidth/2, wallpaperHeight/2),
+            }));
+        this.context.graphics.addSprite(
+            new StandardSprite(this.context.graphics, terrain, this.context.assets.background, wallpaperWidth, wallpaperHeight, [], {
+                zIndex: 1,
+                offset: vec2.fromValues(wallpaperWidth/2, wallpaperHeight/2),
+        }));
     }
 }

@@ -18,7 +18,9 @@ export class Box extends GameObject<[number, number]> implements Portalizable {
 
     readonly zIndex = 2;
 
-    public sprite = new StandardSprite(this.body, this.context.assets.box, 1, 1, { zIndex: 2 });
+    public sprite = new StandardSprite(this.context.graphics, this.body, this.context.assets.box, 1, 1, [{
+        x: 0, y: 0, w: 256, h: 256
+    }], { zIndex: 2 });
 
     public init([x, y]: [number, number]) {
         this.x = x;
