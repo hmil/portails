@@ -1,4 +1,4 @@
-import { vec4 } from 'gl-matrix';
+import { mat3, vec4 } from 'gl-matrix';
 import { rigidBodyTransform } from 'lib/glutils';
 import { Solid } from 'lib/graphics/solid';
 import { Sprite } from 'lib/graphics/sprite';
@@ -26,6 +26,8 @@ export const PORTAL_PROJECTILE_CATEGORY = 0x2;
 
 export class Projectile extends GameObject<ProjectileProps> implements Sprite {
 
+    modelTransform = mat3.identity(mat3.create());
+
     static physicsInitialized = false;
     static toRemove: Projectile[] = [];
     static portalToCreate: Array<{pos: Vec2, normal: Vec2, type: 1 | 2}> = [];
@@ -49,9 +51,9 @@ export class Projectile extends GameObject<ProjectileProps> implements Sprite {
 
     private color!: vec4;
 
-    draw(gl: WebGLRenderingContext): void {
-        rigidBodyTransform(this.solid.transform, this.body);
-        this.solid.draw(gl);
+    draw(): void {
+        rigidBodyTransform(this.solid.modelTransform, this.body);
+        this.solid.draw();
     }
 
     zIndex = 3;

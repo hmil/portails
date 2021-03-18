@@ -1,10 +1,6 @@
 
 export interface AssetImage {
     src: string;
-    x: number;
-    y: number;
-    width: number;
-    height: number;
 }
 
 export interface ImageFrame {
@@ -19,8 +15,8 @@ export interface ImageSprite {
     frames: ReadonlyArray<ImageFrame>;
 }
 
-export function image(src: string, x: number, y: number, width: number, height: number): AssetImage {
-    return {src, x, y, width, height};
+export function image(src: string): AssetImage {
+    return {src};
 }
 
 type LoadedAsset<T> = T extends AssetImage ? TexImageSource : never;

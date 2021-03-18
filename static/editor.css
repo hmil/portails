@@ -1,0 +1,173 @@
+:root {
+    font-family: sans-serif;
+    font-size: 13px;
+
+    --color-bg-main: #232325;
+    --color-bg-1: #38383b;
+    --color-bg-1-highlight: #4a4a4e;
+    --color-bg-2: #67676b;
+    --color-bg-2-highlight: #7a7a80;
+
+    --color-fg-main: #ccc;
+    --color-fg-highlight: #f5f4f4;
+    --color-fg-2: #9b9b9b;
+
+    --color-primary: #e4c00b;
+    --color-primary-highlight: #f9d00d;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+#app {
+    height: 100%;
+    width: 100%;
+}
+
+body, html {
+    width: 100%;
+    height: 100%;
+    background-color: var(--color-bg-main);
+    color: var(--color-fg-main);
+    padding: 0;
+    margin: 0;
+    overflow: hidden;
+}
+
+.workbench {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.central-container {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: row;
+}
+
+.toolbar {
+    background-color: var(--color-bg-1);
+    height: 30px;
+    padding: 1px 10px;
+}
+
+.toolbar .tool {
+    padding: 5px;
+    border-radius: 2px;
+    border: 1px var(--color-fg-2) solid;
+    width: 28px;
+    height: 28px;
+    cursor: pointer;
+}
+
+.canvas {
+    background-color: var(--color-bg-2);
+    background-image: url('/static/checker.png');
+    background-size: 10px 10px;
+    flex-grow: 1;
+    position: relative;
+}
+
+.canvas-svg {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+}
+
+.editor-dock {
+    width: 300px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.editor-panel {
+    background-color: var(--color-bg-1);
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    border-top: 1px var(--color-bg-main) solid;
+}
+
+.editor-panel .panel-title {
+    background-color: var(--color-bg-1-highlight);
+    padding: 3px 5px;
+    font-weight: 600;
+}
+
+.editor-panel .panel-content {
+    flex-grow: 1;
+}
+
+.ui-list {
+    background-color: var(--color-bg-2);
+    padding: 5px 0;
+    height: 100%;
+}
+
+.ui-list .ui-list-item {
+    padding: 5px 10px;
+}
+
+.ui-list .ui-list-item.selected {
+    background-color: var(--color-bg-2-highlight);
+    color: var(--color-fg-highlight);
+}
+.ui-list .ui-list-item:hover {
+    background-color: var(--color-primary);
+    color: var(--color-fg-highlight);
+}
+.ui-list .ui-list-item.selected:hover {
+    background-color: var(--color-primary-highlight);
+    color: var(--color-fg-highlight);
+}
+
+.ui-text-input {
+    border-radius: 2px;
+    border: 1px var(--color-bg-main) solid;
+    padding: 2px 5px;
+}
+.ui-text-input:focus {
+    border: 1px var(--color-primary) solid;
+}
+
+.ui-editable-text-resting {
+    padding: 2px 5px;
+    border: 1px transparent solid;
+}
+
+.ui-form {
+    padding: 5px;
+}
+
+.ui-form .ui-form-row {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    padding: 2px 0;
+}
+
+.ui-form label {
+    font-weight: 600;
+    padding-right: 10px;
+}
+
+input {
+    color: var(--color-fg-main);
+    font-size: inherit;
+    outline: none;
+    width: 100%;
+}
+
+.objects-panel, .properties-panel {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.objects-panel .list-container,
+.properties-panel .list-container {
+    flex-grow: 1;
+}

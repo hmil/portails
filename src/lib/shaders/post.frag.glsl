@@ -37,7 +37,6 @@ vec2 rotate270(in vec2 vec) {
  */
 float getPortalZ(in vec2 characterPos, in vec2 portalOrigin, in vec2 portalNormal) {
     vec2 characterPortal = portalOrigin - characterPos;
-    vec2 characterFragment = vWorldCoord - characterPos;
     vec2 portalFragment = portalOrigin - vWorldCoord;
     vec2 portalTangent = rotate90(portalNormal);
 
@@ -46,16 +45,19 @@ float getPortalZ(in vec2 characterPos, in vec2 portalOrigin, in vec2 portalNorma
         return 0.0;
     }
 
+    vec2 advance = normalize(characterPortal) * min(length(characterPortal), 1.0);
+    vec2 characterFragment = vWorldCoord - (characterPos + advance);
+
     vec2 portalTopEdge = portalOrigin + portalTangent * expansion;
     vec2 portalBottomEdge = portalOrigin - portalTangent * expansion;
-    vec2 characterTopEdge = normalize(portalTopEdge - characterPos);
-    vec2 characterBottomEdge = normalize(portalBottomEdge - characterPos);
+    vec2 characterTopEdge = normalize(portalTopEdge - (characterPos + advance));
+    vec2 characterBottomEdge = normalize(portalBottomEdge - (characterPos + advance));
 
     float distanceToSide = clamp(1.0 * min(dot(characterFragment, rotate90(characterTopEdge)), dot(characterFragment, rotate270(characterBottomEdge)))
         + clamp(0.75 - dot(-characterPortal, portalNormal) / 4.0));
 
     float nearWall = clamp(clamp(dot(portalNormal, portalFragment) * 100.0) + clamp(length(portalFragment) - length(characterPortal)));
-    float farWall = clamp(4.0 - 1.0 * length(characterPortal) - length(portalFragment) / 4.0);
+    float farWall = clamp(5.0 - 1.0 * length(characterPortal) - length(portalFragment) / 4.0);
     return farWall * nearWall * distanceToSide;
 }
 

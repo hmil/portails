@@ -15,12 +15,12 @@ export class Solid implements Sprite {
     private static positionAttribute: number;
     private static tmp3: mat3;
 
-    public transform = mat3.identity(mat3.create());
+    public modelTransform = mat3.identity(mat3.create());
 
     zIndex?: number | undefined;
 
     constructor(
-        gl: WebGLRenderingContext,
+        private readonly gl: WebGLRenderingContext,
         private readonly graphics: Graphics,
         private readonly width: number,
         private readonly height: number,
@@ -56,14 +56,15 @@ export class Solid implements Sprite {
         Solid.initialized = true;
     }
 
-    draw(gl: WebGLRenderingContext): void {
+    draw(): void {
+        const gl = this.gl;
         gl.useProgram(Solid.program);
         gl.bindBuffer(gl.ARRAY_BUFFER, Solid.positions);
         gl.vertexAttribPointer(
             Solid.positionAttribute,
             2, gl.FLOAT, false, 0, 0);
         gl.enableVertexAttribArray(Solid.positionAttribute);
-        copyTransformToMat4(Solid.modelMatrix, this.transform);
+        copyTransformToMat4(Solid.modelMatrix, this.modelTransform);
         // mat4.translate(Solid.modelMatrix, Solid.modelMatrix, this.offset);
         mat4.scale(Solid.modelMatrix, Solid.modelMatrix, vec3.fromValues(this.width / 2, this.height / 2, 1.0));
         gl.uniformMatrix4fv(Solid.modelMatrixUniform, false, Solid.modelMatrix);

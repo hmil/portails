@@ -5,6 +5,7 @@ module.exports = {
     mode: process.env.NODE_ENV || 'development',
     entry: {
         app: './src/main.ts',
+        editor: './src/editor/main.ts'
     },
     output: {
         path: path.resolve(__dirname, 'dist'),

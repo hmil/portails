@@ -4,35 +4,12 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="static/editor.css">
     <title>Document</title>
 </head>
 <body>
-    <canvas id="canvas"></canvas>
-    <script>
-        const ctx = document.getElementById('canvas').getContext('2d');
-
-        const images = [];
-        for (var i = 0 ; i < 10 ; i++) {
-            images.push(`static/character/Run__00${i}.png`);
-        }
-        Promise.all(images.map(src => new Promise((resolve, reject) => {
-            const img = new Image();
-            img.onload = () => {
-                resolve(img);
-            }
-            img.onerror = reject;
-            img.src = src;
-        }))).then((results) => {
-            const width = results.reduce((acc, i) => i.width + acc, 0);
-            const height = results[0].height;
-            ctx.canvas.width = width;
-            ctx.canvas.height = height;
-            let dx = 0;
-            results.forEach(r => {
-                ctx.drawImage(r, dx, 0);
-                dx += r.width;
-            });
-        });
-    </script>
+    <div id="app"></div>
+    <script src="./dist/vendors.bundle.js"></script>
+    <script src="./dist/editor.bundle.js"></script>
 </body>
 </html>

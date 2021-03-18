@@ -31,7 +31,7 @@ export interface PortalSurrogate {
 export interface Portalizable {
     portalSurrogate: PortalSurrogate | null;
     createBody(): planck.Body;
-    sprite: StandardSprite;
+    sprite: Sprite;
     onPortal?: () => void;
 }
 
@@ -54,9 +54,9 @@ export class Portal extends GameObject<void> implements Sprite {
 
     private portalingBodies = new Map<planck.Body, { count: number, portal: IPortal}>();
 
-    private isDrawing = false;
-
     private portalingToRemove: planck.Body[] = [];
+
+    public modelTransform = mat3.create();
 
     init() {
         this.context.graphics.addSprite(this);
@@ -209,19 +209,19 @@ export class Portal extends GameObject<void> implements Sprite {
     private createSurrogate(portalizable: Portalizable): PortalSurrogate {
         const body = portalizable.createBody();
         body.setUserData('portal-surrogate');
+        const savedTransform = mat3.create();
         const sprite: Sprite = {
             get zIndex() { return portalizable.sprite.zIndex; },
-            draw(gl: WebGLRenderingContext) {
-                const oldBody = portalizable.sprite.body;
-                portalizable.sprite.body = body;
-                const savedTrsfm = portalizable.sprite.transform;
+            modelTransform: mat3.create(),
+            draw() {
+                mat3.copy(savedTransform, portalizable.sprite.modelTransform);
+                mat3.copy(portalizable.sprite.modelTransform, rigidBodyTransform(this.modelTransform, body));
                 if (PortalService.isMirror) {
-                    portalizable.sprite.transform = mat3.scale(mat3.create(), portalizable.sprite.transform, vec2.fromValues(-1, 1));
+                    portalizable.sprite.modelTransform = mat3.scale(mat3.create(), portalizable.sprite.modelTransform, vec2.fromValues(-1, 1));
                 }
-                portalizable.sprite.draw(gl);
+                portalizable.sprite.draw();
 
-                portalizable.sprite.transform = savedTrsfm;
-                portalizable.sprite.body = oldBody;
+                mat3.copy(portalizable.sprite.modelTransform, savedTransform);
             }
         }
         this.context.graphics.addSprite(sprite);
@@ -324,12 +324,12 @@ export class Portal extends GameObject<void> implements Sprite {
         vec2.set(PortalService.portal2Normal, normal.x, normal.y);
     }
 
-    draw(gl: WebGLRenderingContext) {
+    draw() {
         if (this.portal1) {
-            this.drawPortal(gl, this.portal1, PORTAL_COLOR_1);
+            this.drawPortal(this.context.graphics.gl, this.portal1, PORTAL_COLOR_1);
         }
         if (this.portal2) {
-            this.drawPortal(gl, this.portal2, PORTAL_COLOR_2);
+            this.drawPortal(this.context.graphics.gl, this.portal2, PORTAL_COLOR_2);
         }
         
         // if (!this.isDrawing && this.portal1 && this.portal2) {
@@ -381,8 +381,8 @@ export class Portal extends GameObject<void> implements Sprite {
 
     private drawPortal(gl: WebGLRenderingContext, portal: IPortal, color: vec4) {
         portal.sprite.color = color;
-        rigidBodyTransform(portal.sprite.transform, portal.body);
-        portal.sprite.draw(gl);
+        rigidBodyTransform(portal.sprite.modelTransform, portal.body);
+        portal.sprite.draw();
         // ctx.save();
         // ctx.fillStyle = color;
         // ctx.translate(portal.body.getPosition().x, portal.body.getPosition().y);

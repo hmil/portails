@@ -1,7 +1,8 @@
-import { vec2 } from "gl-matrix";
+import { mat3, vec2 } from "gl-matrix";
 
 export interface Sprite {
-    draw(gl: WebGLRenderingContext): void;
+    modelTransform: mat3;
+    draw(): void;
     readonly zIndex?: number;
 }
 

@@ -9,6 +9,8 @@ import { GameObject } from './game-object';
 import { initPortalSurrogate, Portal, Portalizable, PortalSurrogate } from './portal';
 import { Projectile } from './projectile';
 import { StandardSprite } from 'lib/graphics/standard-sprite';
+import { ImageFrame } from 'lib/assets-loader';
+import { rigidBodyTransform } from 'lib/glutils';
 
 // const RADIUS = 50;
 
@@ -16,6 +18,19 @@ const HEIGHT = 1.6;
 const WIDTH = 0.8;
 
 const SPEED = 15;
+
+function animationSequence(width: number, height: number, frames: number) {
+    let ret: ImageFrame[] = []; 
+    for (let i = 0 ; i < frames ; i++) {
+        ret.push({
+            x: i * width,
+            y: 0,
+            w: width,
+            h: height
+        });
+    }
+    return ret;
+}
 
 export class PlayerCharacter extends GameObject implements Portalizable, Sprite {
 
@@ -30,40 +45,17 @@ export class PlayerCharacter extends GameObject implements Portalizable, Sprite 
 
     public body: planck.Body = this.createBody();
 
-    private idleSprite = new StandardSprite(this.context.graphics, this.body, this.context.assets.characterIdle, WIDTH, HEIGHT, [
-        { x: 0, y: 0, w: 290, h: 500},
-        { x: 290, y: 0, w: 290, h: 500},
-        { x: 290 * 2, y: 0, w: 290, h: 500},
-        { x: 290 * 3, y: 0, w: 290, h: 500},
-        { x: 290 * 4, y: 0, w: 290, h: 500},
-        { x: 290 * 5, y: 0, w: 290, h: 500},
-        { x: 290 * 6, y: 0, w: 290, h: 500},
-        { x: 290 * 7, y: 0, w: 290, h: 500},
-        { x: 290 * 8, y: 0, w: 290, h: 500},
-        { x: 290 * 9, y: 0, w: 290, h: 500},
-    ], { zIndex: 2, animationFPS: 12 });
-    private runSprite = new StandardSprite(this.context.graphics, this.body, this.context.assets.characterRun, WIDTH * 1.3, HEIGHT, [
-        { x: 0, y: 0, w: 376, h: 520},
-        { x: 376, y: 0, w: 376, h: 520},
-        { x: 376 * 2, y: 0, w: 376, h: 520},
-        { x: 376 * 3, y: 0, w: 376, h: 520},
-        { x: 376 * 4, y: 0, w: 376, h: 520},
-        { x: 376 * 5, y: 0, w: 376, h: 520},
-        { x: 376 * 6, y: 0, w: 376, h: 520},
-        { x: 376 * 7, y: 0, w: 376, h: 520},
-        { x: 376 * 8, y: 0, w: 376, h: 520},
-        { x: 376 * 9, y: 0, w: 376, h: 520},
-    ], { zIndex: 2, animationFPS: 20 });
-    private jumpSprite = new StandardSprite(this.context.graphics, this.body, this.context.assets.characterJump, WIDTH * 1.35, HEIGHT * 1.1, [
-        { x: 0, y: 0, w: 399, h: 543},
-        { x: 399, y: 0, w: 399, h: 543},
-        { x: 399 * 2, y: 0, w: 399, h: 543},
-        { x: 399 * 3, y: 0, w: 399, h: 543},
-        { x: 399 * 4, y: 0, w: 399, h: 543},
-        { x: 399 * 5, y: 0, w: 399, h: 543},
-    ], { zIndex: 2, animationFPS: 20, oneShot: true  });
+    private gunSprite = new StandardSprite(this.context.graphics, this.context.assets.characterGun, WIDTH, WIDTH/2, []);
+    private idleSprite = new StandardSprite(this.context.graphics, this.context.assets.characterIdle, 0.7*HEIGHT, HEIGHT,
+        animationSequence(454, 649, 12), { zIndex: 2, animationFPS: 12 });
+    private runSprite = new StandardSprite(this.context.graphics, this.context.assets.characterRun, 0.7*HEIGHT * 482 / 454, HEIGHT * 686 / 649, 
+        animationSequence(482, 686, 8), { zIndex: 2, animationFPS: 20 });
+    private jumpSprite = new StandardSprite(this.context.graphics, this.context.assets.characterJump, 0.7*HEIGHT * 545 / 454, HEIGHT * 704 / 649, 
+        animationSequence(545, 704, 8), { zIndex: 2, animationFPS: 20, oneShot: true  });
 
-    public sprite = this.idleSprite;
+    public sprite = this;
+    public bodySprite = this.idleSprite;
+    public modelTransform = mat3.identity(mat3.create());
 
     readonly zIndex = 2;
 
@@ -105,10 +97,6 @@ export class PlayerCharacter extends GameObject implements Portalizable, Sprite 
     }
 
     private trackView = () => {
-        if (this.body == null) {
-            return;
-        }
-
         const camera = this.camera;
         camera.resetTransform();
         camera.translate(SCREEN_WIDTH/2, SCREEN_HEIGHT/2);
@@ -120,26 +108,44 @@ export class PlayerCharacter extends GameObject implements Portalizable, Sprite 
         // const mouseWorldCoords = this.context.graphics.mapToWorldCoordinates(this.mouseCoords[0], this.mouseCoords[1]);
         // camera.translate(-(9 * this.body.getPosition().x + mouseWorldCoords[0])/10, -(9*this.body.getPosition().y + mouseWorldCoords[1])/10);
 
-        mat3.identity(this.sprite.transform);
+        mat3.identity(this.bodySprite.transform);
+        mat3.identity(this.gunSprite.transform);
+        rigidBodyTransform(this.modelTransform, this.body);
+
+        const mousePos = this.context.graphics.mapToWorldCoordinates(this.mouseCoords[0], this.mouseCoords[1]);
+        const gunAngle = Math.atan2(mousePos[1] - PortalService.playerPos[1], mousePos[0] - PortalService.playerPos[0]) - this.body.getAngle();
+
+        const mouseToTheLeft = (gunAngle < -Math.PI / 2 || gunAngle > Math.PI / 2);
+        this.setDirection((this.mirror ? !mouseToTheLeft : mouseToTheLeft) ? 'left' : 'right');
+        
+        // TODO: Account for this.mirror in coordinates
+        const centerOfRotation = mouseToTheLeft ? vec2.fromValues(0.2, -0.1) : vec2.fromValues(-0.2, -0.1);
+        mat3.translate(this.gunSprite.transform, this.gunSprite.transform, mouseToTheLeft ? vec2.fromValues(-0.3, 0.2) : vec2.fromValues(0.3, 0.2));
+
+        mat3.translate(this.gunSprite.transform, this.gunSprite.transform, centerOfRotation);
+
+        mat3.rotate(this.gunSprite.transform, this.gunSprite.transform, mouseToTheLeft ? gunAngle - Math.PI : gunAngle);
+        mat3.translate(this.gunSprite.transform, this.gunSprite.transform, vec2.mul(centerOfRotation, centerOfRotation, vec2.fromValues(-1, -1)));
 
         const isTouchingTheGround = this.isPlayerTouchingTheGround();
-        if (!isTouchingTheGround && this.sprite !== this.jumpSprite) {
-            this.sprite = this.jumpSprite;
-            this.sprite.resetAnimation();
+        if (!isTouchingTheGround && this.bodySprite !== this.jumpSprite) {
+            this.bodySprite = this.jumpSprite;
+            this.bodySprite.resetAnimation();
         } else if (isTouchingTheGround) {
             if (this.keys.left - this.keys.right !== 0) {
-                this.sprite = this.runSprite;
-                mat3.translate(this.sprite.transform, this.sprite.transform, vec2.fromValues(0, 0.1));
+                this.bodySprite = this.runSprite;
+                // mat3.translate(this.sprite.transform, this.sprite.transform, vec2.fromValues(0, 0.1));
             } else {
-                this.sprite = this.idleSprite;
+                this.bodySprite = this.idleSprite;
             }
         }
 
-
         if (this.mirror ? this.direction === 'right' : this.direction === 'left') {
-            mat3.scale(this.sprite.transform, this.sprite.transform, vec2.fromValues(-1, 1));
+            mat3.scale(this.bodySprite.transform, this.bodySprite.transform, vec2.fromValues(-1, 1));
+            mat3.scale(this.gunSprite.transform, this.gunSprite.transform, vec2.fromValues(-1, 1));
         }
 
+        
         mat3.copy(PortalService.playerTransform, camera.transform);
         vec2.set(PortalService.playerPos, this.body.getPosition().x, this.body.getPosition().y);
     }
@@ -167,7 +173,6 @@ export class PlayerCharacter extends GameObject implements Portalizable, Sprite 
 
         if (direction != 0) {
             this.motorJoint.setMotorSpeed(direction * SPEED * (this.mirror ? -1 : 1));
-            this.setDirection(direction > 0 ? 'right' : 'left');
         } else {
             this.motorJoint.setMotorSpeed(0);
         }
@@ -255,8 +260,11 @@ export class PlayerCharacter extends GameObject implements Portalizable, Sprite 
         this.direction = direction;
     }
 
-    draw(gl: WebGLRenderingContext): void {
-        this.sprite.draw(gl);
+    draw(): void {
+        mat3.copy(this.bodySprite.modelTransform, this.modelTransform);
+        mat3.copy(this.gunSprite.modelTransform, this.modelTransform);
+        this.bodySprite.draw();
+        this.gunSprite.draw();
     }
 
     private onMouseMove = (evt: MouseEvent) => {
@@ -267,13 +275,8 @@ export class PlayerCharacter extends GameObject implements Portalizable, Sprite 
     };
 
     private onMouseDown = (evt: MouseEvent) => {
-
         evt.preventDefault();
         evt.stopPropagation();
-
-        if (this.body == null) {
-            return;
-        }
 
         const [x, y] = this.context.graphics.mapToWorldCoordinates(evt.clientX, evt.clientY);
 
@@ -281,7 +284,7 @@ export class PlayerCharacter extends GameObject implements Portalizable, Sprite 
 
         const direction = planck.Vec2(x - playerPos.x, y - playerPos.y);
         direction.normalize();
-        const start = playerPos.clone().add(direction);
+        const start = playerPos.clone();
 
         this.createObject(Projectile, {
             position: start,
@@ -289,24 +292,6 @@ export class PlayerCharacter extends GameObject implements Portalizable, Sprite 
             type: evt.button === 0 ? 1 : 2,
             portal: this.portal
         });
-    
-        // const end = playerPos.clone().add(direction.mul(100));
-
-
-        // let f = 1;
-        // this.context.physics.world.rayCast(start, end, (fixture, point, normal, fraction) => {
-        //     if (fraction < f && fixture.getUserData() !== 'portal-gate' && fixture.getUserData() !== 'portal' && fixture.getBody().isStatic()) {
-        //         const position = Vec2(point.x, point.y);
-        //         console.log(normal);
-        //         if (evt.button === 0) {
-        //             this.portal.setPortal1(position, Math.atan2(normal.y, normal.x));
-        //         } else if (evt.button === 2) {
-        //             this.portal.setPortal2(position, Math.atan2(normal.y, normal.x));
-        //         }
-        //         f = fraction;
-        //     }
-        //     return 1;
-        // });
 
         return false;
     };

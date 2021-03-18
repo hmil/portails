@@ -20,8 +20,12 @@
   },
   "dependencies": {
     "@types/matter-js": "^0.14.10",
+    "@types/react": "^17.0.3",
+    "@types/react-dom": "^17.0.2",
     "gl-matrix": "^3.3.0",
-    "matter-js": "^0.16.1",
-    "planck-js": "^0.3.23"
+    "immer": "^8.0.2",
+    "planck-js": "^0.3.23",
+    "react": "^17.0.1",
+    "react-dom": "^17.0.1"
   }
 }

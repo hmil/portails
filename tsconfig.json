@@ -17,7 +17,11 @@
         "target": "es5",
         "baseUrl": "src",
         "outDir": "build/tsc/",
-        "allowJs": true
+        "allowJs": true,
+        "lib": [
+            "DOM",
+            "ES2015"
+        ]
     },
     "include": [
         "src/"

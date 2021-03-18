@@ -53,7 +53,8 @@ export class Level1 extends GameObject {
         terrain.createFixture({
             filterCategoryBits: 0x1 | PORTAL_PROJECTILE_CATEGORY,
             shape: Chain([
-                toWorld(Vec2(-108.755, 612.802)),
+                toWorld(Vec2(-71, 0.0)),
+                toWorld(Vec2(-71, 612.802)),
                 toWorld(Vec2(61.33, 611.151)),
                 toWorld(Vec2(61.33, 813)),
                 toWorld(Vec2(612.275, 813)),
@@ -87,12 +88,12 @@ export class Level1 extends GameObject {
         const wallpaperWidth = 2308 / 64;
         const wallpaperHeight = 1218 / 64;
         this.context.graphics.addSprite(
-            new StandardSprite(this.context.graphics, terrain, this.context.assets.foreground, wallpaperWidth, wallpaperHeight, [], {
+            new StandardSprite(this.context.graphics, this.context.assets.foreground, wallpaperWidth, wallpaperHeight, [], {
                 zIndex: 3,
                 offset: vec2.fromValues(wallpaperWidth/2, wallpaperHeight/2),
             }));
         this.context.graphics.addSprite(
-            new StandardSprite(this.context.graphics, terrain, this.context.assets.background, wallpaperWidth, wallpaperHeight, [], {
+            new StandardSprite(this.context.graphics, this.context.assets.background, wallpaperWidth, wallpaperHeight, [], {
                 zIndex: 1,
                 offset: vec2.fromValues(wallpaperWidth/2, wallpaperHeight/2),
         }));

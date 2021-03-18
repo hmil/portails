@@ -5,7 +5,6 @@ import { EventBus } from 'lib/events';
 import { GameLoop } from 'lib/game-loop';
 import { Graphics } from 'lib/graphics';
 import { Level1 } from 'lib/levels/level1';
-import { FpsMeter } from 'lib/objects/fps-meter';
 import { PlayerCharacter } from 'lib/objects/player-character';
 import { Physics } from 'lib/physics';
 
@@ -24,7 +23,6 @@ async function main() {
     player.init();
     const level = new Level1(context);
     level.init();
-    level.createObject(FpsMeter, undefined);
 
     gameLoop.start();
     // tileSheet(graphics.ctx);

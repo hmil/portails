@@ -353,7 +353,7 @@ export class Graphics {
 
         for (const bucket of this.sprites) {
             for (const sprite of bucket) {
-                sprite.draw(camera.gl);
+                sprite.draw();
             }
         }
     }

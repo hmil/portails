@@ -15,6 +15,8 @@ export class StandardSprite implements Sprite {
 
     public transform = mat3.identity(mat3.create());
 
+    public modelTransform = mat3.identity(mat3.create());
+
     private static program: WebGLProgram;
     private static positions: WebGLBuffer;
     private static modelMatrixUniform: WebGLUniformLocation;
@@ -31,7 +33,6 @@ export class StandardSprite implements Sprite {
 
     constructor(
         private readonly graphics: Graphics,
-        public body: planck.Body,
         private readonly spriteSheet: TexImageSource,
         private width: number,
         private height: number,
@@ -94,7 +95,7 @@ export class StandardSprite implements Sprite {
         this.startTime = Date.now();
     }
 
-    draw(gl: WebGLRenderingContext): void {
+    draw(): void {
         const timeFrame = Math.round((Date.now() - this.startTime) * this.animationFPS / 1000);
 
         const frame = this.oneShot ? Math.min(timeFrame, this.frames.length - 1) : timeFrame % this.frames.length;
@@ -112,6 +113,8 @@ export class StandardSprite implements Sprite {
         StandardSprite.vertexData[14] = right;
         StandardSprite.vertexData[15] = top;
 
+        const gl = this.graphics.gl;
+
         gl.useProgram(StandardSprite.program);
 
         gl.bindBuffer(gl.ARRAY_BUFFER, StandardSprite.positions);
@@ -126,7 +129,7 @@ export class StandardSprite implements Sprite {
             2, gl.FLOAT, false, stride, 2 * Float32Array.BYTES_PER_ELEMENT);
         gl.enableVertexAttribArray(StandardSprite.uvAttribute);
 
-        copyTransformToMat4(StandardSprite.modelMatrix, mat3.mul(StandardSprite.tmp3, rigidBodyTransform(StandardSprite.tmp3, this.body), this.transform));
+        copyTransformToMat4(StandardSprite.modelMatrix, mat3.mul(StandardSprite.tmp3, this.modelTransform, this.transform));
         mat4.translate(StandardSprite.modelMatrix, StandardSprite.modelMatrix, this.offset);
         mat4.scale(StandardSprite.modelMatrix, StandardSprite.modelMatrix, vec3.fromValues(this.width / 2, this.height / 2, 1.0));
         gl.uniformMatrix4fv(StandardSprite.modelMatrixUniform, false, StandardSprite.modelMatrix);

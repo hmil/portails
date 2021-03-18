@@ -1,0 +1,1 @@
+export const CONTROL_COLOR = '#0099ff';
