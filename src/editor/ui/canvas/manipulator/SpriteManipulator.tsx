@@ -1,7 +1,7 @@
 import { ServicesContext } from "editor/context/ServicesContext";
 import { StateContext } from "editor/context/StateContext";
 import { ObjectSprite } from "editor/model/sprite";
-import { editSprite } from "editor/state/actions";
+import { editSprite, pushSceneToUndoStack } from "editor/state/actions";
 import produce from "immer";
 import * as React from "react";
 import { CONTROL_COLOR } from "./colors";
@@ -16,7 +16,7 @@ export function SpriteManipulator(props: SpriteManipulatorProps) {
     const { displayService } = React.useContext(ServicesContext);
     const { state, dispatch } = React.useContext(StateContext);
 
-    const parentTransform = state.objects.find(obj => obj.guid === props.sprite.ownerId)?.properties.transform;
+    const parentTransform = state.scene.objects.find(obj => obj.guid === props.sprite.ownerId)?.properties.transform;
     if (parentTransform == null) {
         throw new Error('Orphan sprite');
     }
@@ -65,6 +65,7 @@ export function SpriteManipulator(props: SpriteManipulatorProps) {
             })));
         }
 
+        dispatch(pushSceneToUndoStack());
         window.addEventListener('mouseup', onUp);
         window.addEventListener('mousemove', onMove);
     }

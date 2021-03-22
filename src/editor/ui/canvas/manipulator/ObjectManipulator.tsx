@@ -1,22 +1,23 @@
 import { ServicesContext } from "editor/context/ServicesContext";
 import { WorldObject } from "editor/model/object";
-import { ObjectActions, editObject, selectObject } from "editor/state/actions";
+import { ObjectActions, editObject, selectObject, pushSceneToUndoStack, UndoActions } from "editor/state/actions";
 import { callback } from "editor/ui/hooks/utils";
-import { DisplayService } from "editor/ui/services/DisplayService";
+import { DisplayService } from "editor/services/DisplayService";
 import produce from "immer";
 import * as React from "react";
+import { GridService } from "editor/services/GridService";
 
 const crossSize = 12;
 const margin = 14;
 
 export interface ObjectManipulatorProps {
     model: WorldObject;
-    dispatch: React.Dispatch<ObjectActions>;
+    dispatch: React.Dispatch<ObjectActions | UndoActions>;
 }
 
 export function ObjectManipulator(props: ObjectManipulatorProps) {
 
-    const { displayService } = React.useContext(ServicesContext);
+    const { displayService, gridService } = React.useContext(ServicesContext);
 
     const [isHover, setHover ] = React.useState(false);
 
@@ -26,7 +27,7 @@ export function ObjectManipulator(props: ObjectManipulatorProps) {
     const crossScreenSize = displayService.zoomIndependentLength(crossSize);
     const lineWidth = displayService.zoomIndependentLength(1);
     const boundingMargin = displayService.zoomIndependentLength(margin);
-    const onMouseDown = mouseDownCallback(props.model, props.dispatch, displayService);
+    const onMouseDown = mouseDownCallback(props.model, props.dispatch, displayService, gridService);
     return <g onMouseDown={onMouseDown} onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}>
         <rect 
             width={boundingBox.right - boundingBox.left + boundingMargin * 2}
@@ -43,7 +44,7 @@ export function ObjectManipulator(props: ObjectManipulatorProps) {
     </g>
 }
 
-const mouseDownCallback = callback((model: WorldObject, dispatch: React.Dispatch<ObjectActions>, displayService: DisplayService) => (evt: React.MouseEvent) => {
+const mouseDownCallback = callback((model: WorldObject, dispatch: React.Dispatch<ObjectActions | UndoActions>, displayService: DisplayService, gridService: GridService) => (evt: React.MouseEvent) => {
     evt.preventDefault();
     evt.stopPropagation();
     const startPos = displayService.screenCoordsToWorldCoords({x: evt.clientX, y: evt.clientY});
@@ -61,12 +62,15 @@ const mouseDownCallback = callback((model: WorldObject, dispatch: React.Dispatch
         newPos.x -= startOffset.x;
         newPos.y -= startOffset.y;
 
+        const snapped = gridService.snapToGrid({ left: newPos.x, right: newPos.x, top: newPos.y, bottom: newPos.y });
+
         dispatch(editObject(produce(model, draft => {
-            draft.properties.transform.x = newPos.x;
-            draft.properties.transform.y = newPos.y;
+            draft.properties.transform.x = snapped.left;
+            draft.properties.transform.y = snapped.top;
         })));
     }
     window.addEventListener('mouseup', onRelease);
     window.addEventListener('mousemove', onMove);
     dispatch(selectObject(model));
+    dispatch(pushSceneToUndoStack());
 });

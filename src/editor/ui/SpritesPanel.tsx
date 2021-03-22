@@ -1,6 +1,6 @@
 import { StateContext } from 'editor/context/StateContext';
 import { ObjectSprite } from 'editor/model/sprite';
-import { createSprite } from 'editor/state/actions';
+import { createSprite, pushSceneToUndoStack } from 'editor/state/actions';
 import { AppActions } from 'editor/state/reducer';
 import { uniqId } from 'editor/utils/uid';
 import * as React from 'react';
@@ -17,7 +17,7 @@ export function SpritesPanel() {
 
     const [ freshSprite, setFreshSprite ] = useFresh();
 
-    const selectedObject = state.objects.find(o => o.guid === state.selectedObjectId);
+    const selectedObject = state.scene.objects.find(o => o.guid === state.scene.selectedObjectId);
     const renderListItem = renderItemCallback(dispatch, freshSprite);
 
     return <Panel title="Sprites">
@@ -30,6 +30,7 @@ export function SpritesPanel() {
                     <Button onClick={() => {
                         const guid = String(uniqId());
                         setFreshSprite(guid);
+                        dispatch(pushSceneToUndoStack());
                         dispatch(createSprite({
                             ownerId: selectedObject?.guid,
                             spriteId: guid

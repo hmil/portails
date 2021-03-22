@@ -1,6 +1,6 @@
 import { WorldObject } from 'editor/model/object';
 import { ObjectSprite } from 'editor/model/sprite';
-import { editSprite, selectSprite, SpriteActions } from 'editor/state/actions';
+import { editSprite, pushSceneToUndoStack, selectSprite, SpriteActions, UndoActions } from 'editor/state/actions';
 import { produce } from 'immer';
 import * as React from 'react';
 
@@ -11,7 +11,7 @@ import { callback } from './hooks/utils';
 
 export interface SpriteListItemProps {
     sprite: ObjectSprite;
-    dispatch: React.Dispatch<SpriteActions>;
+    dispatch: React.Dispatch<SpriteActions | UndoActions>;
     fresh: boolean;
 }
 
@@ -30,8 +30,12 @@ export function SpriteListItem(props: SpriteListItemProps) {
 }
 
 const selectSpriteCallback = callback((dispatch: React.Dispatch<SpriteActions>, sprite: ObjectSprite) => () => dispatch(selectSprite(sprite)));
-const editSpriteNameCallback = callback((dispatch: React.Dispatch<SpriteActions>, sprite: ObjectSprite) => (value: string) => dispatch(editSprite(
-    produce(sprite, draft => {
-        draft.properties.name = value;
-    })
-)));
+const editSpriteNameCallback = callback((dispatch: React.Dispatch<SpriteActions | UndoActions>, sprite: ObjectSprite) => (value: string) => {
+    if (value === sprite.properties.name) { return; }
+    dispatch(pushSceneToUndoStack());
+    dispatch(editSprite(
+        produce(sprite, draft => {
+            draft.properties.name = value;
+        })
+    ));
+});

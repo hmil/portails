@@ -1,6 +1,6 @@
 import { StateContext } from 'editor/context/StateContext';
 import { WorldObject } from 'editor/model/object';
-import { createObject, deleteSelectedObject, lowerSelectedObject, raiseSelectedObject } from 'editor/state/actions';
+import { createObject, deleteSelectedObject, lowerSelectedObject, pushSceneToUndoStack, raiseSelectedObject } from 'editor/state/actions';
 import { AppActions } from 'editor/state/reducer';
 import { uniqId } from 'editor/utils/uid';
 import * as React from 'react';
@@ -20,13 +20,13 @@ export function ObjectsPanel() {
     return <Panel title="Objects">
         <div className="objects-panel">
             <div className="list-container">
-                <List renderItem={renderItemCallback(dispatch, freshObject)} data={state.objects}></List>
+                <List renderItem={renderItemCallback(dispatch, freshObject)} data={state.scene.objects}></List>
             </div>
             <div className="actions-container">
                 <Button onClick={createObjectCallback(dispatch, setFreshObject)} value="+" tooltip="Add object"></Button>
                 <Button onClick={deleteObjectCallback(dispatch)} value="-" tooltip="Add object"></Button>
-                <Button onClick={raiseObjectCallback(dispatch)} value="up" tooltip="Move object up"></Button>
-                <Button onClick={lowerObjectCallback(dispatch)} value="down" tooltip="Move object down"></Button>
+                <Button onClick={raiseObjectCallback(dispatch)} value="▲" tooltip="Move object up"></Button>
+                <Button onClick={lowerObjectCallback(dispatch)} value="▼" tooltip="Move object down"></Button>
             </div>
         </div>
     </Panel>
@@ -35,15 +35,19 @@ export function ObjectsPanel() {
 const createObjectCallback = callback((dispatch: React.Dispatch<AppActions>, setFreshObject: (object: string) => void) => () => {
     const guid = String(uniqId());
     setFreshObject(guid);
+    dispatch(pushSceneToUndoStack());
     dispatch(createObject({ guid }));
 });
 const deleteObjectCallback = callback((dispatch: React.Dispatch<AppActions>) => () => {
+    dispatch(pushSceneToUndoStack());
     dispatch(deleteSelectedObject());
 });
 const raiseObjectCallback = callback((dispatch: React.Dispatch<AppActions>) => () => {
+    dispatch(pushSceneToUndoStack());
     dispatch(raiseSelectedObject());
 });
 const lowerObjectCallback = callback((dispatch: React.Dispatch<AppActions>) => () => {
+    dispatch(pushSceneToUndoStack());
     dispatch(lowerSelectedObject());
 });
 

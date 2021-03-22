@@ -10,5 +10,5 @@ export function getSelectedSprite(state: AppState): ObjectSprite | undefined {
 }
 
 export function getSelectedObject(state: AppState): WorldObject | undefined {
-    return state.objects.find(obj => obj.guid === state.selectedObjectId);
+    return state.scene.objects.find(obj => obj.guid === state.scene.selectedObjectId);
 }

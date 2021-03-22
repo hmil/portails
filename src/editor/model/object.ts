@@ -36,3 +36,25 @@ export function worldObjectDefaults(guid: string): WritableDraft<WorldObject> {
         selected: false
     };
 }
+
+
+export function computeObjectBoundingBox(sprites: ReadonlyArray<ObjectSprite>): Rectangle {
+    let left = 0;
+    let top = 0;
+    let right = 0;
+    let bottom = 0;
+
+    if (sprites.length === 0) {
+        return defaultBoundingBox();
+    }
+
+    sprites.forEach(sprite => {
+        const trsf = sprite.properties.transform;
+        if (trsf.x - trsf.scaleX/2 < left) left = trsf.x - trsf.scaleX/2;
+        if (trsf.y - trsf.scaleY/2 < top) top = trsf.y - trsf.scaleY/2;
+        if (trsf.x + trsf.scaleX/2 > right) right = trsf.x + trsf.scaleX/2;
+        if (trsf.y + trsf.scaleY/2 > bottom) bottom = trsf.y + trsf.scaleY/2;
+    });
+
+    return { left, top, right, bottom };
+}

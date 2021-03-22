@@ -1,5 +1,5 @@
 import { Viewport } from 'editor/model/viewport';
-import { effect } from '../hooks/utils';
+import { effect } from '../ui/hooks/utils';
 
 export interface DisplayCanvasRect {
     height: number;

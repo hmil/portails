@@ -1,4 +1,4 @@
-import { defaultBoundingBox, WorldObject } from 'editor/model/object';
+import { computeObjectBoundingBox, WorldObject } from 'editor/model/object';
 import { ObjectSpriteProperties, spriteDefaults } from 'editor/model/sprite';
 import produce from 'immer';
 import { WritableDraft } from 'immer/dist/internal';
@@ -13,7 +13,7 @@ export const createSprite = action('createSprite', (s: AppState, data: { ownerId
     newSprite.properties.name = 'New Sprite ' + data.spriteId;
     newSprite.selected = true;
     owner.sprites.push(newSprite);
-    updateOwnerBoundingBox(owner);
+    owner.boundingBox = computeObjectBoundingBox(owner.sprites);
 }));
 
 export const editSprite = action('editSprite', (s: AppState, data: { ownerId: string, spriteId: string, properties: ObjectSpriteProperties}) => produce(s, draft => {
@@ -22,7 +22,7 @@ export const editSprite = action('editSprite', (s: AppState, data: { ownerId: st
     if (sprite) {
         sprite.properties = data.properties;
     }
-    updateOwnerBoundingBox(owner);
+    owner.boundingBox = computeObjectBoundingBox(owner.sprites);
 }));
 
 export const selectSprite = action('selectSprite', (s: AppState, data: { ownerId: string, spriteId: string }) => produce(s, draft => {
@@ -32,34 +32,13 @@ export const selectSprite = action('selectSprite', (s: AppState, data: { ownerId
         unselectCurrentSprite(owner);
         selectedSprite.selected = true;
     }
-    updateOwnerBoundingBox(owner);
+    owner.boundingBox = computeObjectBoundingBox(owner.sprites);
 }));
 
 
-function updateOwnerBoundingBox(owner: WritableDraft<WorldObject>) {
-    let left = 0;
-    let top = 0;
-    let right = 0;
-    let bottom = 0;
-
-    if (owner.sprites.length === 0) {
-        owner.boundingBox = defaultBoundingBox();
-        return;
-    }
-
-    owner.sprites.forEach(sprite => {
-        const trsf = sprite.properties.transform;
-        if (trsf.x - trsf.scaleX/2 < left) left = trsf.x - trsf.scaleX/2;
-        if (trsf.y - trsf.scaleY/2 < top) top = trsf.y - trsf.scaleY/2;
-        if (trsf.x + trsf.scaleX/2 > right) right = trsf.x + trsf.scaleX/2;
-        if (trsf.y + trsf.scaleY/2 > bottom) bottom = trsf.y + trsf.scaleY/2;
-    });
-
-    owner.boundingBox = { left, top, right, bottom };
-}
 
 function getOwner(draft: WritableDraft<AppState>, ownerId: string): WritableDraft<WorldObject> {
-    const owner = draft.objects.find(o => o.guid === ownerId);
+    const owner = draft.scene.objects.find(o => o.guid === ownerId);
     if (owner == null) {
         throw new Error('No owner')
     }

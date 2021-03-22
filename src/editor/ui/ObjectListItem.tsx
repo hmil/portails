@@ -1,5 +1,5 @@
 import { WorldObject } from 'editor/model/object';
-import { editObject, ObjectActions, selectObject } from 'editor/state/actions';
+import { editObject, ObjectActions, pushSceneToUndoStack, selectObject, UndoActions } from 'editor/state/actions';
 import { produce } from 'immer';
 import * as React from 'react';
 
@@ -10,7 +10,7 @@ import { callback } from './hooks/utils';
 
 export interface ObjectListItemProps {
     object: WorldObject;
-    dispatch: React.Dispatch<ObjectActions>;
+    dispatch: React.Dispatch<ObjectActions | UndoActions>;
     fresh: boolean;
 }
 
@@ -29,6 +29,8 @@ export function ObjectListItem(props: ObjectListItemProps) {
 }
 
 const selectObjectCallback = callback((dispatch: React.Dispatch<ObjectActions>, guid: string) => () => dispatch(selectObject({ guid })));
-const editObjectNameCallback = callback((dispatch: React.Dispatch<ObjectActions>, object: WorldObject) => (value: string) => dispatch(editObject(
-    produce(object, draft => { draft.properties.name = value; })
-)));
+const editObjectNameCallback = callback((dispatch: React.Dispatch<ObjectActions | UndoActions>, object: WorldObject) => (value: string) => {
+    if (value === object.properties.name) { return; }
+    dispatch(pushSceneToUndoStack());
+    dispatch(editObject(produce(object, draft => { draft.properties.name = value; })));
+});

@@ -1,31 +1,32 @@
 import { ServicesContext } from 'editor/context/ServicesContext';
-import { Transform } from 'editor/model/geometry';
+import { Rectangle, Transform } from 'editor/model/geometry';
 import { WorldObject } from 'editor/model/object';
 import { ObjectSprite } from 'editor/model/sprite';
-import { editSprite, ObjectActions, selectObject, selectSprite, SpriteActions } from 'editor/state/actions';
+import { editSprite, ObjectActions, pushSceneToUndoStack, selectObject, selectSprite, SpriteActions, UndoActions } from 'editor/state/actions';
 import produce from 'immer';
 import * as React from 'react';
 
 import { callback } from '../hooks/utils';
-import { DisplayService } from '../services/DisplayService';
+import { Coords, DisplayService } from '../../services/DisplayService';
+import { GridService } from 'editor/services/GridService';
 
 export interface CanvasSpriteProps {
     sprite: ObjectSprite;
     parent: WorldObject;
     parentTransform: Transform;
-    dispatch: React.Dispatch<SpriteActions | ObjectActions>;
+    dispatch: React.Dispatch<SpriteActions | ObjectActions | UndoActions>;
 }
 
 export function CanvasSprite(props: CanvasSpriteProps) {
 
     const [isHover, setHover ] = React.useState(false);
 
-    const { displayService } = React.useContext(ServicesContext);
+    const { displayService, gridService } = React.useContext(ServicesContext);
     const width = props.parentTransform.scaleX * props.sprite.properties.transform.scaleX;
     const height = props.parentTransform.scaleY * props.sprite.properties.transform.scaleY;
     const x = props.parentTransform.x + props.sprite.properties.transform.x * props.parentTransform.scaleX - width/2;
     const y = props.parentTransform.y + props.sprite.properties.transform.y * props.parentTransform.scaleY - height / 2;
-    const onMouseDown = mouseDownCallback(props.parent, props.sprite, props.dispatch, displayService);
+    const onMouseDown = mouseDownCallback(props.parent, props.sprite, props.dispatch, displayService, gridService);
     return <g onMouseDown={onMouseDown} onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}>
         <image 
             preserveAspectRatio="none"
@@ -42,7 +43,13 @@ export function CanvasSprite(props: CanvasSpriteProps) {
     </g>;
 }
 
-const mouseDownCallback = callback((parent: WorldObject, model: ObjectSprite, dispatch: React.Dispatch<SpriteActions | ObjectActions>, displayService: DisplayService) => (evt: React.MouseEvent) => {
+const mouseDownCallback = callback((
+    parent: WorldObject,
+    model: ObjectSprite,
+    dispatch: React.Dispatch<SpriteActions | ObjectActions | UndoActions>,
+    displayService: DisplayService,
+    gridService: GridService
+) => (evt: React.MouseEvent) => {
     // if (!parent.selected) {
     //     return;
     // }
@@ -64,12 +71,26 @@ const mouseDownCallback = callback((parent: WorldObject, model: ObjectSprite, di
         newPos.x -= startOffset.x;
         newPos.y -= startOffset.y;
 
+        const spriteRect: Rectangle = {
+            bottom: newPos.y + model.properties.transform.scaleY/2,
+            top: newPos.y - model.properties.transform.scaleY/2,
+            left: newPos.x - model.properties.transform.scaleX/2,
+            right: newPos.x + model.properties.transform.scaleX/2,
+        }
+
+        const snappedRect = gridService.snapToGrid(spriteRect);
+        const fixedCoords: Coords = {
+            x: snappedRect.left + (snappedRect.right - snappedRect.left) / 2,
+            y: snappedRect.top + (snappedRect.bottom - snappedRect.top) / 2,
+        }
+
         dispatch(editSprite(produce(model, draft => {
-            draft.properties.transform.x = newPos.x;
-            draft.properties.transform.y = newPos.y;
+            draft.properties.transform.x = fixedCoords.x;
+            draft.properties.transform.y = fixedCoords.y;
         })));
     }
     window.addEventListener('mouseup', onRelease);
     window.addEventListener('mousemove', onMove);
     dispatch(selectSprite(model));
+    dispatch(pushSceneToUndoStack());
 });

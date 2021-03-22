@@ -43,6 +43,8 @@ body, html {
 
 .central-container {
     flex-grow: 1;
+    flex-shrink: 1;
+    height: 200px;
     display: flex;
     flex-direction: row;
 }
@@ -51,6 +53,8 @@ body, html {
     background-color: var(--color-bg-1);
     height: 30px;
     padding: 1px 10px;
+    display: flex;
+    flex-direction: row;
 }
 
 .toolbar .tool {
@@ -81,6 +85,7 @@ body, html {
     height: 100%;
     display: flex;
     flex-direction: column;
+    overflow: auto;
 }
 
 .editor-panel {
@@ -105,6 +110,7 @@ body, html {
     background-color: var(--color-bg-2);
     padding: 5px 0;
     height: 100%;
+    overflow: auto;
 }
 
 .ui-list .ui-list-item {
@@ -154,6 +160,31 @@ body, html {
     padding-right: 10px;
 }
 
+.ui-button {
+    background-color: var(--color-bg-1);
+    color: var(--color-fg-main);
+    border: 1px var(--color-bg-main) solid;
+    border-radius: 2px;
+    outline: none;
+    box-shadow: 0px 1px 1px #ffffff10 inset;
+    background: linear-gradient(0deg, var(--color-bg-1) 30%, var(--color-bg-1-highlight) 60%);
+}
+
+.ui-button.active {
+    background-color: var(--color-primary);
+    background: linear-gradient(0deg, var(--color-primary) 30%, var(--color-primary-highlight) 60%);
+    color: var(--color-fg-main-highlight);
+}
+
+.ui-button.disabled {
+    background: var(--color-bg-1);
+    pointer-events: none;
+}
+
+.ui-button:not(.disabled):hover {
+    border-color: var(--color-primary);
+}
+
 input {
     color: var(--color-fg-main);
     font-size: inherit;
@@ -170,4 +201,22 @@ input {
 .objects-panel .list-container,
 .properties-panel .list-container {
     flex-grow: 1;
+    flex-shrink: 1;
+    height: 100px;
+}
+
+.panel-section-title {
+    margin: 2px 4px;
+}
+
+.tile-picker-tile {
+    width: 40px;
+    margin: 5px;
+    padding: 1px;
+    cursor: pointer;
+}
+
+.tile-picker-tile:hover {
+    border: 1px var(--color-primary) solid;
+    padding: 0px;
 }

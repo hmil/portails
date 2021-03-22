@@ -1,0 +1,217 @@
+{
+    "objects": [
+        {
+            "name": "Floor1",
+            "transform": {
+                "a": 0,
+                "x": -1,
+                "y": -1,
+                "sX": 1,
+                "sY": 1
+            },
+            "sprites": [
+                {
+                    "name": "unnamed",
+                    "src": "/static/tile-pack-2/tiles/horizontal_to_vertical_end_right.png",
+                    "transform": {
+                        "a": 0,
+                        "x": 0.5,
+                        "y": 0.5,
+                        "sX": 1,
+                        "sY": 1
+                    }
+                },
+                {
+                    "name": "floor",
+                    "src": "/static/tile-pack-2/tiles/top.png",
+                    "transform": {
+                        "a": 0,
+                        "x": 1.5,
+                        "y": 0.5,
+                        "sX": 1,
+                        "sY": 1
+                    }
+                },
+                {
+                    "name": "floor",
+                    "src": "/static/tile-pack-2/tiles/top.png",
+                    "transform": {
+                        "a": 0,
+                        "x": 2.5,
+                        "y": 0.5,
+                        "sX": 1,
+                        "sY": 1
+                    }
+                },
+                {
+                    "name": "New Sprite 4",
+                    "src": "/static/tile-pack-2/tiles/steep_slope_left_01.png",
+                    "transform": {
+                        "a": 0,
+                        "x": 3.5,
+                        "y": 0.5,
+                        "sX": 1,
+                        "sY": 1
+                    }
+                },
+                {
+                    "name": "New Sprite 5",
+                    "src": "/static/tile-pack-2/tiles/steep_slope_left_02.png",
+                    "transform": {
+                        "a": 0,
+                        "x": 3.5,
+                        "y": -0.5,
+                        "sX": 1,
+                        "sY": 1
+                    }
+                },
+                {
+                    "name": "New Sprite 6",
+                    "src": "/static/tile-pack-2/tiles/shallow_slope_left_01.png",
+                    "transform": {
+                        "a": 0,
+                        "x": 4.5,
+                        "y": -0.5,
+                        "sX": 1,
+                        "sY": 1
+                    }
+                },
+                {
+                    "name": "New Sprite 7",
+                    "src": "/static/tile-pack-2/tiles/shallow_slope_left_02.png",
+                    "transform": {
+                        "a": 0,
+                        "x": 4.5,
+                        "y": -1.5,
+                        "sX": 1,
+                        "sY": 1
+                    }
+                },
+                {
+                    "name": "New Sprite 8",
+                    "src": "/static/tile-pack-2/tiles/shallow_slope_left_03.png",
+                    "transform": {
+                        "a": 0,
+                        "x": 5.5,
+                        "y": -1.5,
+                        "sX": 1,
+                        "sY": 1
+                    }
+                },
+                {
+                    "name": "New Sprite 9",
+                    "src": "/static/tile-pack-2/tiles/shallow_slope_left_01.png",
+                    "transform": {
+                        "a": 0,
+                        "x": 6.5,
+                        "y": -1.5,
+                        "sX": 1,
+                        "sY": 1
+                    }
+                },
+                {
+                    "name": "New Sprite 10",
+                    "src": "/static/tile-pack-2/tiles/fill.png",
+                    "transform": {
+                        "a": 0,
+                        "x": 6,
+                        "y": 0,
+                        "sX": 2,
+                        "sY": 2
+                    }
+                },
+                {
+                    "name": "New Sprite 11",
+                    "src": "/static/tile-pack-2/tiles/fill.png",
+                    "transform": {
+                        "a": 0,
+                        "x": 4.5,
+                        "y": 0.5,
+                        "sX": 1,
+                        "sY": 1
+                    }
+                },
+                {
+                    "name": "New Sprite 16",
+                    "src": "/static/tile-pack-2/tiles/shallow_slope_left_02.png",
+                    "transform": {
+                        "a": 0,
+                        "x": 6.5,
+                        "y": -2.5,
+                        "sX": 1,
+                        "sY": 1
+                    }
+                },
+                {
+                    "name": "New Sprite 17",
+                    "src": "/static/tile-pack-2/tiles/shallow_slope_left_03.png",
+                    "transform": {
+                        "a": 0,
+                        "x": 7.5,
+                        "y": -2.5,
+                        "sX": 1,
+                        "sY": 1
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Floor2",
+            "transform": {
+                "a": 0,
+                "x": 8,
+                "y": -1.9999999999999998,
+                "sX": 1,
+                "sY": 1
+            },
+            "sprites": [
+                {
+                    "name": "unnamed",
+                    "src": "/static/tile-pack-2/tiles/horizontal_to_vertical_passthrough_right.png",
+                    "transform": {
+                        "a": 0,
+                        "x": -0.5,
+                        "y": -1.4999999999999998,
+                        "sX": 1,
+                        "sY": 1
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Wall1",
+            "transform": {
+                "a": 0,
+                "x": -1.9999999999999998,
+                "y": -1.9999999999999998,
+                "sX": 1,
+                "sY": 1
+            },
+            "sprites": [
+                {
+                    "name": "unnamed",
+                    "src": "/static/tile-pack-2/tiles/right_edge.png",
+                    "transform": {
+                        "a": 0,
+                        "x": 1.5,
+                        "y": 0.5,
+                        "sX": 1,
+                        "sY": 1
+                    }
+                },
+                {
+                    "name": "New Sprite 14",
+                    "src": "/static/tile-pack-2/tiles/right_edge.png",
+                    "transform": {
+                        "a": 0,
+                        "x": 1.4999999999999998,
+                        "y": -0.5,
+                        "sX": 1,
+                        "sY": 1
+                    }
+                }
+            ]
+        }
+    ],
+    "version": 1
+}
