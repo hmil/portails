@@ -1,22 +1,22 @@
 import { WorldObject } from 'editor/model/object';
-import { ObjectActions, SpriteActions, UndoActions } from 'editor/state/actions';
+import { GeometryActions, ObjectActions, SpriteActions, UndoActions } from 'editor/state/actions';
 import * as React from 'react';
 
 import { CanvasSprite } from './CanvasSprite';
 
 export interface CanvasObjectProps {
     model: WorldObject;
-    dispatch: React.Dispatch<ObjectActions | SpriteActions| UndoActions>;
+    dispatch: React.Dispatch<ObjectActions | SpriteActions | GeometryActions | UndoActions>;
 }
 
-export function CanvasObject(props: CanvasObjectProps) {
-    return <g>
+export function CanvasObjectSprite(props: CanvasObjectProps) {
+    const transform = props.model.properties.transform;
+    return <g transform={`scale(${transform.scaleY} ${transform.scaleY}) translate(${transform.x} ${transform.y})`}>
         <title>{props.model.properties.name}</title>
-        
+
         { props.model.sprites.map(sprite => <CanvasSprite
                 sprite={sprite}
                 parent={props.model}
-                parentTransform={props.model.properties.transform}
                 key={sprite.spriteId}
                 dispatch={props.dispatch}
             ></CanvasSprite>)

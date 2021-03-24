@@ -8,12 +8,11 @@ import { AppState } from '../state';
 
 export const createSprite = action('createSprite', (s: AppState, data: { ownerId: string, spriteId: string }) => produce(s, draft => {
     const owner = getOwner(draft, data.ownerId);
-    unselectCurrentSprite(owner);
     const newSprite = spriteDefaults(data.ownerId, data.spriteId);
     newSprite.properties.name = 'New Sprite ' + data.spriteId;
-    newSprite.selected = true;
     owner.sprites.push(newSprite);
-    owner.boundingBox = computeObjectBoundingBox(owner.sprites);
+    draft.scene.selection = { type: 'sprite', objectId: data.ownerId, spriteId: data.spriteId };
+    owner.boundingBox = computeObjectBoundingBox(owner);
 }));
 
 export const editSprite = action('editSprite', (s: AppState, data: { ownerId: string, spriteId: string, properties: ObjectSpriteProperties}) => produce(s, draft => {
@@ -22,19 +21,22 @@ export const editSprite = action('editSprite', (s: AppState, data: { ownerId: st
     if (sprite) {
         sprite.properties = data.properties;
     }
-    owner.boundingBox = computeObjectBoundingBox(owner.sprites);
+    owner.boundingBox = computeObjectBoundingBox(owner);
 }));
 
 export const selectSprite = action('selectSprite', (s: AppState, data: { ownerId: string, spriteId: string }) => produce(s, draft => {
-    const owner = getOwner(draft, data.ownerId);
-    const selectedSprite = owner.sprites.find(el => el.spriteId === data.spriteId);
-    if (selectedSprite != null) {
-        unselectCurrentSprite(owner);
-        selectedSprite.selected = true;
-    }
-    owner.boundingBox = computeObjectBoundingBox(owner.sprites);
+    draft.scene.selection = { type: 'sprite', objectId: data.ownerId, spriteId: data.spriteId };
 }));
 
+export const removeSelectedSprite = action('removeSelectedSprite', (s: AppState) => produce(s, draft => {
+    const selection = s.scene.selection;
+    if (selection?.type !== 'sprite') {
+        return;
+    }
+    const owner = getOwner(draft, selection.objectId);
+    owner.sprites = owner.sprites.filter(s => s.spriteId !== selection.spriteId);
+    draft.scene.selection = { type: 'object', objectId: selection.objectId };
+}));
 
 
 function getOwner(draft: WritableDraft<AppState>, ownerId: string): WritableDraft<WorldObject> {
@@ -43,12 +45,5 @@ function getOwner(draft: WritableDraft<AppState>, ownerId: string): WritableDraf
         throw new Error('No owner')
     }
     return owner;
-}
-
-function unselectCurrentSprite(draft: WritableDraft<WorldObject>) {
-    const prev = draft.sprites.find(el => el.selected);
-    if (prev) {
-        prev.selected = false;
-    }
 }
 

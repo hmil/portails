@@ -1,13 +1,15 @@
 import { ServicesContext } from 'editor/context/ServicesContext';
 import { StateContext } from 'editor/context/StateContext';
 import { Viewport } from 'editor/model/viewport';
-import { scrollViewport, unselectCurrent, zoomViewport } from 'editor/state/actions';
-import { getSelectedSprite } from 'editor/state/selectors';
+import { scrollViewport, zoomViewport } from 'editor/state/actions';
+import { getCurrentGeometry, getSelectedSprite } from 'editor/state/selectors';
 import * as React from 'react';
 
-import { memo } from '../hooks/utils';
 import { DisplayCanvasRect } from '../../services/DisplayService';
-import { CanvasObject } from './CanvasObject';
+import { memo } from '../hooks/utils';
+import { CanvasObjectGeometry } from './CanvasObjectGeometry';
+import { CanvasObjectSprite } from './CanvasObjectSprite';
+import { GeometryManipulator } from './manipulator/GeometryManipulator';
 import { ObjectManipulator } from './manipulator/ObjectManipulator';
 import { SpriteManipulator } from './manipulator/SpriteManipulator';
 
@@ -23,6 +25,7 @@ export function Canvas() {
     const [resizeCounter, setResizeCounter] = React.useState(0);
 
     const currentSprite = getSelectedSprite(state);
+    const currentGeometry = getCurrentGeometry(state);
 
     React.useEffect(() => {
         let counter = 0;
@@ -56,9 +59,11 @@ export function Canvas() {
     return (
         <div ref={canvasEl} className="canvas">
             <svg viewBox={viewBox} className="canvas-svg">
-                { state.scene.objects.map(object => <CanvasObject model={object} dispatch={dispatch} key={object.guid}></CanvasObject>) }
-                { state.scene.objects.map(object => <ObjectManipulator model={object} dispatch={dispatch} key={object.guid}></ObjectManipulator>) }
+                { state.scene.objects.map(object => <CanvasObjectSprite model={object} dispatch={dispatch} key={object.guid}></CanvasObjectSprite>) }
+                { state.scene.objects.map(object => <CanvasObjectGeometry selection={state.scene.selection} model={object} dispatch={dispatch} key={object.guid}></CanvasObjectGeometry>) }
+                { state.scene.objects.map(object => <ObjectManipulator model={object} dispatch={dispatch} selection={state.scene.selection} key={object.guid}></ObjectManipulator>) }
                 { currentSprite != null ? <SpriteManipulator sprite={currentSprite}></SpriteManipulator> : undefined }
+                { currentGeometry != null ? <GeometryManipulator geometry={currentGeometry} dispatch={dispatch}></GeometryManipulator> : undefined }
             </svg>
         </div>
     );

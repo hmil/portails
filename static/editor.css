@@ -106,6 +106,39 @@ body, html {
     flex-grow: 1;
 }
 
+.tabs-container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.tabs-content {
+    flex-grow: 1;
+}
+
+.tabs-header {
+    display: flex;
+    border-top: 1px var(--color-bg-1) solid;
+    background-color: var(--color-bg-1-highlight);
+    font-weight: 600;
+}
+
+.tabs-header > * {
+    padding: 3px 5px;
+    cursor: pointer;
+}
+
+.tabs-header > .selected {
+    background-color: var(--color-bg-1);
+    border-top: 1px var(--color-primary) solid;
+    margin-top: -1px;
+}
+
+.tabs-header > :hover {
+    border-top: 1px var(--color-primary) solid;
+    margin-top: -1px;
+}
+
 .ui-list {
     background-color: var(--color-bg-2);
     padding: 5px 0;
@@ -114,7 +147,10 @@ body, html {
 }
 
 .ui-list .ui-list-item {
-    padding: 5px 10px;
+    display: flex;
+    padding: 0 10px;
+    height: 30px;
+    align-items: center;
 }
 
 .ui-list .ui-list-item.selected {
@@ -129,19 +165,24 @@ body, html {
     background-color: var(--color-primary-highlight);
     color: var(--color-fg-highlight);
 }
+.ui-list .ui-list-item:focus {
+    outline: none;
+}
 
 .ui-text-input {
     border-radius: 2px;
     border: 1px var(--color-bg-main) solid;
     padding: 2px 5px;
 }
-.ui-text-input:focus {
-    border: 1px var(--color-primary) solid;
-}
 
 .ui-editable-text-resting {
     padding: 2px 5px;
     border: 1px transparent solid;
+}
+
+.ui-editable-text-resting:focus {
+    outline: none;
+    border: 1px var(--color-fg-main) dashed;
 }
 
 .ui-form {
@@ -176,12 +217,13 @@ body, html {
     color: var(--color-fg-main-highlight);
 }
 
-.ui-button.disabled {
+.ui-button[disabled] {
     background: var(--color-bg-1);
     pointer-events: none;
 }
 
-.ui-button:not(.disabled):hover {
+.ui-button:not([disabled]):hover,
+.ui-button:not([disabled]):focus {
     border-color: var(--color-primary);
 }
 
@@ -219,4 +261,10 @@ input {
 .tile-picker-tile:hover {
     border: 1px var(--color-primary) solid;
     padding: 0px;
+}
+
+img.sprite-list-item {
+    height: 25px;
+    display: block;
+    margin-right: 3px;
 }

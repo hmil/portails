@@ -1,5 +1,6 @@
 import { WorldObject } from 'editor/model/object';
 import { editObject, ObjectActions, pushSceneToUndoStack, selectObject, UndoActions } from 'editor/state/actions';
+import { SceneSelection } from 'editor/state/state';
 import { produce } from 'immer';
 import * as React from 'react';
 
@@ -10,6 +11,7 @@ import { callback } from './hooks/utils';
 
 export interface ObjectListItemProps {
     object: WorldObject;
+    selection: SceneSelection;
     dispatch: React.Dispatch<ObjectActions | UndoActions>;
     fresh: boolean;
 }
@@ -19,10 +21,10 @@ export function ObjectListItem(props: ObjectListItemProps) {
     const selectCallback = selectObjectCallback(props.dispatch, props.object.guid);
     const changeNameCallback = editObjectNameCallback(props.dispatch, props.object)
 
-    return <ListItem<WorldObject> 
+    return <ListItem 
         key={props.object.guid}
         onClick={selectCallback}
-        selected={props.object.selected}
+        selected={props.selection?.objectId === props.object.guid}
     >
         <EditableText height={2} forceEditing={props.fresh ? true : undefined} value={props.object.properties.name} onChange={changeNameCallback}></EditableText>
     </ListItem>;

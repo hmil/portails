@@ -11,6 +11,7 @@ import { callback } from './hooks/utils';
 
 export interface SpriteListItemProps {
     sprite: ObjectSprite;
+    selected: boolean;
     dispatch: React.Dispatch<SpriteActions | UndoActions>;
     fresh: boolean;
 }
@@ -20,12 +21,12 @@ export function SpriteListItem(props: SpriteListItemProps) {
     const selectCallback = selectSpriteCallback(props.dispatch, props.sprite);
     const changeNameCallback = editSpriteNameCallback(props.dispatch, props.sprite)
 
-    return <ListItem<WorldObject> 
-        key={props.sprite.spriteId}
+    return <ListItem
         onClick={selectCallback}
-        selected={props.sprite.selected}
+        selected={props.selected}
     >
-        <EditableText forceEditing={props.fresh ? true : undefined} value={props.sprite.properties.name} onChange={changeNameCallback}></EditableText>
+        <img className="sprite-list-item" src={props.sprite.properties.src} />
+        <EditableText onFocus={() => props.dispatch(selectSprite(props.sprite))} forceEditing={props.fresh ? true : undefined} value={props.sprite.properties.name} onChange={changeNameCallback}></EditableText>
     </ListItem>;
 }
 

@@ -9,5 +9,7 @@ TODO:
   - [x] Portal rendering
   - [x] Projectile rendering
 - [ ] Button trigger + door
-- [ ] Level editor
+- [~] Level editor
+  - [x] Basic editing
+  - [ ] Import in game
 - [ ] (later) Attempt to write a joint to handle through-portal physics

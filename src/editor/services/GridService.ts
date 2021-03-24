@@ -18,7 +18,7 @@ export const defaultGridConfig: GridConfig = {
     stepY: 1
 };
 
-const SNAP_DISTANCE = 10;
+const SNAP_DISTANCE = 20;
 
 export class GridService {
 

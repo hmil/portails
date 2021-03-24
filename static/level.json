@@ -152,6 +152,40 @@
                         "sX": 1,
                         "sY": 1
                     }
+                },
+                {
+                    "name": "New Sprite 22",
+                    "src": "/static/tile-pack-2/tiles/fill.png",
+                    "transform": {
+                        "a": 0,
+                        "x": 8,
+                        "y": -0.5,
+                        "sX": 2,
+                        "sY": 3
+                    }
+                }
+            ],
+            "geometries": [
+                {
+                    "name": "Floor",
+                    "vertices": [
+                        {
+                            "x": 8.003904240289238,
+                            "y": -2.9804787985538117
+                        },
+                        {
+                            "x": 3.9986985865702533,
+                            "y": -0.9804787985538118
+                        },
+                        {
+                            "x": 3,
+                            "y": 0.020822614875934106
+                        },
+                        {
+                            "x": 0.8662511389707532,
+                            "y": 0.014679753039795379
+                        }
+                    ]
                 }
             ]
         },
@@ -160,14 +194,14 @@
             "transform": {
                 "a": 0,
                 "x": 8,
-                "y": -1.9999999999999998,
+                "y": -2,
                 "sX": 1,
                 "sY": 1
             },
             "sprites": [
                 {
-                    "name": "unnamed",
-                    "src": "/static/tile-pack-2/tiles/horizontal_to_vertical_passthrough_right.png",
+                    "name": "Floor",
+                    "src": "/static/tile-pack-2/tiles/top.png",
                     "transform": {
                         "a": 0,
                         "x": -0.5,
@@ -176,20 +210,35 @@
                         "sY": 1
                     }
                 }
+            ],
+            "geometries": [
+                {
+                    "name": "Floor",
+                    "vertices": [
+                        {
+                            "x": -0.9999999999999999,
+                            "y": -1.9772287585485413
+                        },
+                        {
+                            "x": 0,
+                            "y": -1.9772287585485415
+                        }
+                    ]
+                }
             ]
         },
         {
             "name": "Wall1",
             "transform": {
                 "a": 0,
-                "x": -1.9999999999999998,
-                "y": -1.9999999999999998,
+                "x": -2,
+                "y": -2,
                 "sX": 1,
                 "sY": 1
             },
             "sprites": [
                 {
-                    "name": "unnamed",
+                    "name": "Wall",
                     "src": "/static/tile-pack-2/tiles/right_edge.png",
                     "transform": {
                         "a": 0,
@@ -200,7 +249,7 @@
                     }
                 },
                 {
-                    "name": "New Sprite 14",
+                    "name": "Wall",
                     "src": "/static/tile-pack-2/tiles/right_edge.png",
                     "transform": {
                         "a": 0,
@@ -210,8 +259,23 @@
                         "sY": 1
                     }
                 }
+            ],
+            "geometries": [
+                {
+                    "name": "Wall",
+                    "vertices": [
+                        {
+                            "x": 1.8711443899840183,
+                            "y": -0.9967378326578232
+                        },
+                        {
+                            "x": 1.8695133063129301,
+                            "y": 1.0163108367108837
+                        }
+                    ]
+                }
             ]
         }
     ],
-    "version": 1
+    "version": 2
 }

@@ -7,8 +7,27 @@ import { defaultGridConfig, GridConfig } from 'editor/services/GridService';
  * This is the state in the undo/redo stack
  */
 export interface SceneState extends Scene {
-    selectedObjectId: string | null;
+    selection: SceneSelection | null;
 }
+
+interface SceneSpriteSelection {
+    type: 'sprite';
+    objectId: string;
+    spriteId: string;
+}
+
+interface SceneGeometrySelection {
+    type: 'geometry';
+    objectId: string;
+    geometryId: string;
+}
+
+interface SceneObjectSelection {
+    type: 'object';
+    objectId: string;
+}
+
+export type SceneSelection = SceneSpriteSelection | SceneGeometrySelection | SceneObjectSelection | null;
 
 export type UndoStackObj = { scene: SceneState, next: UndoStackObj } | null;
 
@@ -25,7 +44,7 @@ export const appInitialState: AppState = {
     redoStack: null,
     scene: {
         objects: [worldObjectDefaults('default')],
-        selectedObjectId: null,
+        selection: null,
     },
     viewport: {
         centerX: 0,

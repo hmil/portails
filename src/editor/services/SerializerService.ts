@@ -1,15 +1,16 @@
-import { PortailsObject, PortailsScene, PortailsSprite, PortailsTransform } from 'editor/model/dto';
-import { Transform } from 'editor/model/geometry';
+import { PortailsScene } from 'dto';
+import { PortailsGeometry, PortailsObject, PortailsSprite, PortailsTransform } from 'dto/v2';
+import { ObjectGeometry, Transform } from 'editor/model/geometry';
 import { WorldObject } from 'editor/model/object';
 import { Scene } from 'editor/model/scene';
 import { ObjectSprite } from 'editor/model/sprite';
 
 export class SerializerService {
 
-    serialize(scene: Scene): PortailsScene {
+    toDTO(scene: Scene): PortailsScene {
         return {
             objects: scene.objects.map(this.serializeObject),
-            version: 1
+            version: 2
         };
     }
     
@@ -17,7 +18,8 @@ export class SerializerService {
         return {
             name: object.properties.name,
             transform: this.serializeTransform(object.properties.transform),
-            sprites: object.sprites.map(this.serializeSprite)
+            sprites: object.sprites.map(this.serializeSprite),
+            geometries: object.geometries.map(this.serializeGeometry)
         };
     }
     
@@ -33,5 +35,12 @@ export class SerializerService {
             src: sprite.properties.src,
             transform: this.serializeTransform(sprite.properties.transform)
         }
+    }
+
+    private serializeGeometry = (sprite: ObjectGeometry): PortailsGeometry => {
+        return {
+            name: sprite.name,
+            vertices: [...sprite.vertices]
+        };
     }
 }

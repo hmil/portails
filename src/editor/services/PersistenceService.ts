@@ -24,7 +24,7 @@ export class PersistenceService {
         if (this.scene == null) {
             throw new Error('No scene to save');
         }
-        const ser = JSON.stringify(this.serializerService.serialize(this.scene), null, 4);
+        const ser = JSON.stringify(this.serializerService.toDTO(this.scene), null, 4);
         const blob = new Blob([ser], { type: 'application/prs.portails-level+json'})
         this.downloadService.download(blob, 'level.json');
     }

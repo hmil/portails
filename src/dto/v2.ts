@@ -16,15 +16,28 @@ export const PortailsSprite = rt.Record({
     transform: PortailsTransform
 });
 
+export type PortailsVertex = rt.Static<typeof PortailsVertex>;
+export const PortailsVertex = rt.Record({
+    x: rt.Number,
+    y: rt.Number
+});
+
+export type PortailsGeometry = rt.Static<typeof PortailsGeometry>;
+export const PortailsGeometry = rt.Record({
+    name: rt.String,
+    vertices: rt.Array(PortailsVertex)
+});
+
 export type PortailsObject = rt.Static<typeof PortailsObject>;
 export const PortailsObject = rt.Record({
     sprites: rt.Array(PortailsSprite),
+    geometries: rt.Array(PortailsGeometry),
     name: rt.String,
     transform: PortailsTransform
 });
 
-export type PortailsScene = rt.Static<typeof PortailsScene>;
-export const PortailsScene = rt.Record({
-    version: rt.Literal(1),
+export type PortailsSceneV2 = rt.Static<typeof PortailsSceneV2>;
+export const PortailsSceneV2 = rt.Record({
+    version: rt.Literal(2),
     objects: rt.Array(PortailsObject)
 });

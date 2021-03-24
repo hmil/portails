@@ -1,6 +1,7 @@
 import { action, ActionTypes } from './action-factory';
 import * as objectActions from './actions/object';
 import * as spriteActions from './actions/sprite';
+import * as geometryActions from './actions/geometry';
 import * as viewportActions from './actions/viewport';
 import * as undoActions from './actions/undo';
 import { appInitialState, AppState } from './state';
@@ -12,6 +13,9 @@ export type ObjectActions = ActionTypes<typeof objectActions>;
 
 export * from './actions/sprite';
 export type SpriteActions = ActionTypes<typeof spriteActions>;
+
+export * from './actions/geometry';
+export type GeometryActions = ActionTypes<typeof geometryActions>;
 
 export * from './actions/viewport';
 export type ViewportActions = ActionTypes<typeof viewportActions>;
@@ -26,7 +30,7 @@ export const loadScene = action('loadScene', (s: AppState, data: { scene: Scene 
     redoStack: null,
     scene: {
         ...data.scene,
-        selectedObjectId: null
+        selection: null
     }
 }));
 

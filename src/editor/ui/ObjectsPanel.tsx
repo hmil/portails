@@ -1,6 +1,6 @@
 import { StateContext } from 'editor/context/StateContext';
 import { WorldObject } from 'editor/model/object';
-import { createObject, deleteSelectedObject, lowerSelectedObject, pushSceneToUndoStack, raiseSelectedObject } from 'editor/state/actions';
+import { createObject, deleteSelectedObjects, lowerSelectedObject, pushSceneToUndoStack, raiseSelectedObject } from 'editor/state/actions';
 import { AppActions } from 'editor/state/reducer';
 import { uniqId } from 'editor/utils/uid';
 import * as React from 'react';
@@ -11,16 +11,17 @@ import { ObjectListItem } from './ObjectListItem';
 import { callback } from './hooks/utils';
 import { useFresh } from './hooks/useFresh';
 import { Panel } from './Panel';
+import { SceneSelection } from 'editor/state/state';
 
 export function ObjectsPanel() {
     const { state, dispatch } = React.useContext(StateContext);
 
     const [ freshObject, setFreshObject ] = useFresh();
 
-    return <Panel title="Objects">
+    return <Panel title="Scene">
         <div className="objects-panel">
             <div className="list-container">
-                <List renderItem={renderItemCallback(dispatch, freshObject)} data={state.scene.objects}></List>
+                <List renderItem={renderItemCallback(dispatch, state.scene.selection, freshObject)} data={state.scene.objects}></List>
             </div>
             <div className="actions-container">
                 <Button onClick={createObjectCallback(dispatch, setFreshObject)} value="+" tooltip="Add object"></Button>
@@ -40,7 +41,7 @@ const createObjectCallback = callback((dispatch: React.Dispatch<AppActions>, set
 });
 const deleteObjectCallback = callback((dispatch: React.Dispatch<AppActions>) => () => {
     dispatch(pushSceneToUndoStack());
-    dispatch(deleteSelectedObject());
+    dispatch(deleteSelectedObjects());
 });
 const raiseObjectCallback = callback((dispatch: React.Dispatch<AppActions>) => () => {
     dispatch(pushSceneToUndoStack());
@@ -52,5 +53,5 @@ const lowerObjectCallback = callback((dispatch: React.Dispatch<AppActions>) => (
 });
 
 
-const renderItemCallback = callback((dispatch: React.Dispatch<AppActions>, freshObject: string | null) => (object: WorldObject) =>
-    <ObjectListItem fresh={freshObject === object.guid} dispatch={dispatch} object={object} key={object.guid}></ObjectListItem>);
+const renderItemCallback = callback((dispatch: React.Dispatch<AppActions>, selection: SceneSelection, freshObject: string | null) => (object: WorldObject) =>
+    <ObjectListItem selection={selection} fresh={freshObject === object.guid} dispatch={dispatch} object={object} key={object.guid}></ObjectListItem>);

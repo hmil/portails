@@ -1,3 +1,5 @@
+import { uniqId } from "editor/utils/uid";
+import { WritableDraft } from "immer/dist/internal";
 
 export interface Vertex {
     x: number;
@@ -5,8 +7,6 @@ export interface Vertex {
 }
 
 export interface Transform extends Vertex {
-    x: number;
-    y: number;
     scaleX: number;
     scaleY: number;
     rotation: number;
@@ -18,6 +18,9 @@ export function transformDefaults(): Transform {
 
 export interface ChainGeometry {
     type: 'chain';
+    geometryId: string;
+    name: string;
+    ownerId: string;
     vertices: ReadonlyArray<Vertex>;
 }
 
@@ -30,3 +33,16 @@ export interface Rectangle {
 }
 
 export type ObjectGeometry = ChainGeometry;
+
+export function geometryDefaults(ownerId: string, geometryId: string): WritableDraft<ObjectGeometry> {
+    return {
+        type: 'chain',
+        geometryId,
+        name: 'New geometry',
+        ownerId,
+        vertices: [
+            { x: 0, y: 0},
+            { x: 1, y: 0}
+        ]
+    };
+}

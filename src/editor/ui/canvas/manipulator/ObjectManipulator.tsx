@@ -6,12 +6,14 @@ import { DisplayService } from "editor/services/DisplayService";
 import produce from "immer";
 import * as React from "react";
 import { GridService } from "editor/services/GridService";
+import { SceneSelection } from "editor/state/state";
 
 const crossSize = 12;
 const margin = 14;
 
 export interface ObjectManipulatorProps {
     model: WorldObject;
+    selection: SceneSelection;
     dispatch: React.Dispatch<ObjectActions | UndoActions>;
 }
 
@@ -23,23 +25,31 @@ export function ObjectManipulator(props: ObjectManipulatorProps) {
 
     const boundingBox = props.model.boundingBox;
     const transform = props.model.properties.transform;
-    const drawingColor = isHover ? '#fa4343' : props.model.selected ? '#09ff00' : '#fff';
+    const drawingColor = props.selection?.objectId === props.model.guid ? '#09ff00' : '#fff';
     const crossScreenSize = displayService.zoomIndependentLength(crossSize);
-    const lineWidth = displayService.zoomIndependentLength(1);
+    const lineWidth = displayService.zoomIndependentLength(isHover ? 2 : 1);
+    const mouseWidth = displayService.zoomIndependentLength(8);
     const boundingMargin = displayService.zoomIndependentLength(margin);
     const onMouseDown = mouseDownCallback(props.model, props.dispatch, displayService, gridService);
+
+    function renderLines(color: string, lineWidth: number) {
+        return <>
+            <rect 
+                width={boundingBox.right - boundingBox.left + boundingMargin * 2}
+                height={boundingBox.bottom - boundingBox.top + boundingMargin * 2}
+                x={boundingBox.left + transform.x - boundingMargin}
+                y={boundingBox.top + transform.y - boundingMargin}
+                strokeWidth={lineWidth}
+                fillOpacity="0"
+                fill="none"
+                stroke={color}></rect>
+            <line x1={transform.x - crossScreenSize} y1={transform.y} x2={transform.x + crossScreenSize} y2={transform.y} stroke={color} strokeWidth={lineWidth}></line>
+            <line x1={transform.x} y1={transform.y - crossScreenSize} x2={transform.x} y2={transform.y + crossScreenSize} stroke={color} strokeWidth={lineWidth}></line>
+        </>;
+    }
     return <g onMouseDown={onMouseDown} onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}>
-        <rect 
-            width={boundingBox.right - boundingBox.left + boundingMargin * 2}
-            height={boundingBox.bottom - boundingBox.top + boundingMargin * 2}
-            x={boundingBox.left + transform.x - boundingMargin}
-            y={boundingBox.top + transform.y - boundingMargin}
-            strokeWidth={lineWidth}
-            fillOpacity="0"
-            fill="none"
-            stroke={drawingColor}></rect>
-        <line x1={transform.x - crossScreenSize} y1={transform.y} x2={transform.x + crossScreenSize} y2={transform.y} stroke={drawingColor} strokeWidth={lineWidth}></line>
-        <line x1={transform.x} y1={transform.y - crossScreenSize} x2={transform.x} y2={transform.y + crossScreenSize} stroke={drawingColor} strokeWidth={lineWidth}></line>
+        { renderLines(drawingColor, lineWidth) }
+        { renderLines('transparent', mouseWidth) }
         <circle cx={transform.x} cy={transform.y} r={crossScreenSize / 2} fill="transparent"></circle>
     </g>
 }

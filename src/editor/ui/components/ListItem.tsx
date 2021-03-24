@@ -6,7 +6,7 @@ export interface ListItemProps {
     onClick?: () => void;
 }
 
-export function ListItem<T>(props: React.PropsWithChildren<ListItemProps>) {
+export function ListItem(props: React.PropsWithChildren<ListItemProps>) {
     const className = elementClass(props.selected ?? false);
     return <div className={className} onClick={props.onClick}>{ props.children }</div>;
 }

@@ -1,7 +1,8 @@
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
-import { Workbench } from './ui/Workbench';
+
+import { App } from './ui/App';
 
 console.log('Hello world');
 
-ReactDOM.render(React.createElement(Workbench), document.getElementById('app'));
+ReactDOM.render(React.createElement(App), document.getElementById('app'));

@@ -23,7 +23,8 @@ export const Button = React.memo(function _Button(props: ButtonProps) {
     return <button
         onClick={props.onClick}
         title={props.tooltip}
-        className={`ui-button ${props.active === true ? 'active' : ''} ${props.disabled === true ? 'disabled' : ''}`}
+        className={`ui-button ${props.active === true ? 'active' : ''}`}
+        disabled={props.disabled === true}
         style={buttonStyle(props.style, props.size || 'md')}>{props.value}</button>;
 });
 

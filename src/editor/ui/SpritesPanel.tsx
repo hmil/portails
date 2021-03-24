@@ -1,7 +1,9 @@
 import { StateContext } from 'editor/context/StateContext';
 import { ObjectSprite } from 'editor/model/sprite';
-import { createSprite, pushSceneToUndoStack } from 'editor/state/actions';
+import { createSprite, pushSceneToUndoStack, removeSelectedSprite } from 'editor/state/actions';
 import { AppActions } from 'editor/state/reducer';
+import { getSelectedObject } from 'editor/state/selectors';
+import { SceneSelection } from 'editor/state/state';
 import { uniqId } from 'editor/utils/uid';
 import * as React from 'react';
 
@@ -9,7 +11,6 @@ import { Button } from './components/Button';
 import { List } from './components/List';
 import { useFresh } from './hooks/useFresh';
 import { callback } from './hooks/utils';
-import { Panel } from './Panel';
 import { SpriteListItem } from './SpriteListItem';
 
 export function SpritesPanel() {
@@ -17,30 +18,32 @@ export function SpritesPanel() {
 
     const [ freshSprite, setFreshSprite ] = useFresh();
 
-    const selectedObject = state.scene.objects.find(o => o.guid === state.scene.selectedObjectId);
-    const renderListItem = renderItemCallback(dispatch, freshSprite);
+    const selectedObject = getSelectedObject(state);
+    const renderListItem = renderItemCallback(dispatch, state.scene.selection, freshSprite);
 
-    return <Panel title="Sprites">
-        <div className="properties-panel">
-            { selectedObject == null ? 'Select an object to see its sprites.' : <>
-                <div className="list-container">
-                    <List renderItem={renderListItem} data={selectedObject.sprites}></List>
-                </div>
-                <div className="actions-container">
-                    <Button onClick={() => {
-                        const guid = String(uniqId());
-                        setFreshSprite(guid);
-                        dispatch(pushSceneToUndoStack());
-                        dispatch(createSprite({
-                            ownerId: selectedObject?.guid,
-                            spriteId: guid
-                        }));
-                    }} value="+" tooltip="Add sprite"></Button>
-                </div>
-            </> }
-        </div>
-    </Panel>;
+    return <div className="properties-panel">
+        { selectedObject == null ? 'Select an object to see its sprites.' : <>
+            <div className="list-container">
+                <List renderItem={renderListItem} data={selectedObject.sprites}></List>
+            </div>
+            <div className="actions-container">
+                <Button onClick={() => {
+                    const guid = String(uniqId());
+                    setFreshSprite(guid);
+                    dispatch(pushSceneToUndoStack());
+                    dispatch(createSprite({
+                        ownerId: selectedObject?.guid,
+                        spriteId: guid
+                    }));
+                }} value="+" tooltip="Add sprite"></Button>
+                <Button disabled={state.scene.selection?.type !== 'sprite'} onClick={() => {
+                    dispatch(pushSceneToUndoStack());
+                    dispatch(removeSelectedSprite());
+                }} value="-" tooltip="Remove sprite"></Button>
+            </div>
+        </> }
+    </div>;
 }
 
-const renderItemCallback = callback((dispatch: React.Dispatch<AppActions>, freshSprite: string | null) => (sprite: ObjectSprite) =>
-    <SpriteListItem fresh={freshSprite === sprite.spriteId} dispatch={dispatch} sprite={sprite} key={sprite.spriteId}></SpriteListItem>);
+const renderItemCallback = callback((dispatch: React.Dispatch<AppActions>, selection: SceneSelection, freshSprite: string | null) => (sprite: ObjectSprite) =>
+    <SpriteListItem selected={selection?.type === 'sprite' && selection.spriteId === sprite.spriteId} fresh={freshSprite === sprite.spriteId} dispatch={dispatch} sprite={sprite} key={sprite.spriteId}></SpriteListItem>);
