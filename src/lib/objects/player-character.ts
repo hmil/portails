@@ -79,8 +79,8 @@ export class PlayerCharacter extends GameObject implements Portalizable, Sprite 
         this.camera = this.context.graphics.createCamera();
         // this.context.graphics.addSprite(thids.propellerSprite);
         
-        this.body.setPosition(planck.Vec2(11, 10));
-        this.propeller.setPosition(planck.Vec2(11, 10));
+        this.body.setPosition(planck.Vec2(0, 0));
+        this.propeller.setPosition(planck.Vec2(0, 0));
 
         window.addEventListener('keydown', this.onKeydown);
         window.addEventListener('keyup', this.onKeyUp);

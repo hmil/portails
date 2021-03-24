@@ -57,7 +57,8 @@ export class DeserializerService {
             properties: {
                 name: sprite.name,
                 src: sprite.src,
-                transform: this.hydrateTransform(sprite.transform)
+                transform: this.hydrateTransform(sprite.transform),
+                background: sprite.background ?? false
             },
             spriteId
         };

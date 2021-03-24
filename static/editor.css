@@ -130,13 +130,11 @@ body, html {
 
 .tabs-header > .selected {
     background-color: var(--color-bg-1);
-    border-top: 1px var(--color-primary) solid;
-    margin-top: -1px;
+    border-bottom: 1px var(--color-primary) solid;
 }
 
 .tabs-header > :hover {
-    border-top: 1px var(--color-primary) solid;
-    margin-top: -1px;
+    border-bottom: 1px var(--color-primary) solid;
 }
 
 .ui-list {
@@ -227,7 +225,7 @@ body, html {
     border-color: var(--color-primary);
 }
 
-input {
+input:not([type=checkbox]) {
     color: var(--color-fg-main);
     font-size: inherit;
     outline: none;

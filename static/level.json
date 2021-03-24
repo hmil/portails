@@ -1,11 +1,48 @@
 {
     "objects": [
         {
+            "name": "Background",
+            "transform": {
+                "a": 0,
+                "x": 0,
+                "y": 3.9999999999999996,
+                "sX": 1,
+                "sY": 1
+            },
+            "sprites": [
+                {
+                    "name": "Background",
+                    "src": "/static/tile-pack-2/background/background.png",
+                    "transform": {
+                        "a": 0,
+                        "x": -0.9875000000000016,
+                        "y": 0.3000000000000007,
+                        "sX": 16,
+                        "sY": 12.600000000000001
+                    },
+                    "background": true
+                },
+                {
+                    "name": "Background 1",
+                    "src": "/static/tile-pack-2/background/background.png",
+                    "transform": {
+                        "a": 0,
+                        "x": 15,
+                        "y": 0.3000000000000007,
+                        "sX": 16,
+                        "sY": 12.600000000000001
+                    },
+                    "background": true
+                }
+            ],
+            "geometries": []
+        },
+        {
             "name": "Floor1",
             "transform": {
                 "a": 0,
-                "x": -1,
-                "y": -1,
+                "x": -3,
+                "y": 6,
                 "sX": 1,
                 "sY": 1
             },
@@ -19,7 +56,8 @@
                         "y": 0.5,
                         "sX": 1,
                         "sY": 1
-                    }
+                    },
+                    "background": false
                 },
                 {
                     "name": "floor",
@@ -30,7 +68,8 @@
                         "y": 0.5,
                         "sX": 1,
                         "sY": 1
-                    }
+                    },
+                    "background": false
                 },
                 {
                     "name": "floor",
@@ -41,7 +80,8 @@
                         "y": 0.5,
                         "sX": 1,
                         "sY": 1
-                    }
+                    },
+                    "background": false
                 },
                 {
                     "name": "New Sprite 4",
@@ -52,7 +92,8 @@
                         "y": 0.5,
                         "sX": 1,
                         "sY": 1
-                    }
+                    },
+                    "background": false
                 },
                 {
                     "name": "New Sprite 5",
@@ -63,7 +104,8 @@
                         "y": -0.5,
                         "sX": 1,
                         "sY": 1
-                    }
+                    },
+                    "background": false
                 },
                 {
                     "name": "New Sprite 6",
@@ -74,7 +116,8 @@
                         "y": -0.5,
                         "sX": 1,
                         "sY": 1
-                    }
+                    },
+                    "background": false
                 },
                 {
                     "name": "New Sprite 7",
@@ -85,7 +128,8 @@
                         "y": -1.5,
                         "sX": 1,
                         "sY": 1
-                    }
+                    },
+                    "background": false
                 },
                 {
                     "name": "New Sprite 8",
@@ -96,7 +140,8 @@
                         "y": -1.5,
                         "sX": 1,
                         "sY": 1
-                    }
+                    },
+                    "background": false
                 },
                 {
                     "name": "New Sprite 9",
@@ -107,7 +152,8 @@
                         "y": -1.5,
                         "sX": 1,
                         "sY": 1
-                    }
+                    },
+                    "background": false
                 },
                 {
                     "name": "New Sprite 10",
@@ -118,7 +164,8 @@
                         "y": 0,
                         "sX": 2,
                         "sY": 2
-                    }
+                    },
+                    "background": false
                 },
                 {
                     "name": "New Sprite 11",
@@ -129,7 +176,8 @@
                         "y": 0.5,
                         "sX": 1,
                         "sY": 1
-                    }
+                    },
+                    "background": false
                 },
                 {
                     "name": "New Sprite 16",
@@ -140,7 +188,8 @@
                         "y": -2.5,
                         "sX": 1,
                         "sY": 1
-                    }
+                    },
+                    "background": false
                 },
                 {
                     "name": "New Sprite 17",
@@ -151,7 +200,8 @@
                         "y": -2.5,
                         "sX": 1,
                         "sY": 1
-                    }
+                    },
+                    "background": false
                 },
                 {
                     "name": "New Sprite 22",
@@ -162,7 +212,8 @@
                         "y": -0.5,
                         "sX": 2,
                         "sY": 3
-                    }
+                    },
+                    "background": false
                 }
             ],
             "geometries": [
@@ -193,8 +244,8 @@
             "name": "Floor2",
             "transform": {
                 "a": 0,
-                "x": 8,
-                "y": -2,
+                "x": 6,
+                "y": 5,
                 "sX": 1,
                 "sY": 1
             },
@@ -208,7 +259,8 @@
                         "y": -1.4999999999999998,
                         "sX": 1,
                         "sY": 1
-                    }
+                    },
+                    "background": false
                 }
             ],
             "geometries": [
@@ -231,8 +283,8 @@
             "name": "Wall1",
             "transform": {
                 "a": 0,
-                "x": -2,
-                "y": -2,
+                "x": -3.9999999999999996,
+                "y": 5,
                 "sX": 1,
                 "sY": 1
             },
@@ -246,7 +298,8 @@
                         "y": 0.5,
                         "sX": 1,
                         "sY": 1
-                    }
+                    },
+                    "background": false
                 },
                 {
                     "name": "Wall",
@@ -257,7 +310,8 @@
                         "y": -0.5,
                         "sX": 1,
                         "sY": 1
-                    }
+                    },
+                    "background": false
                 }
             ],
             "geometries": [

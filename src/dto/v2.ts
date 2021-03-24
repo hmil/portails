@@ -10,11 +10,16 @@ export const PortailsTransform = rt.Record({
 });
 
 export type PortailsSprite = rt.Static<typeof PortailsSprite>;
-export const PortailsSprite = rt.Record({
-    name: rt.String,
-    src: rt.String,
-    transform: PortailsTransform
-});
+export const PortailsSprite = rt.Intersect(
+    rt.Record({
+        name: rt.String,
+        src: rt.String,
+        transform: PortailsTransform,
+    }),
+    rt.Partial({
+        background: rt.Boolean
+    })
+);
 
 export type PortailsVertex = rt.Static<typeof PortailsVertex>;
 export const PortailsVertex = rt.Record({

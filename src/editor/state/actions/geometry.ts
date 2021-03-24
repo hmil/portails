@@ -69,6 +69,16 @@ export const editGeometryName = action('editGeometryName', (s: AppState, data: P
     owner.boundingBox = computeObjectBoundingBox(owner);
 }));
 
+export const removeSelectedGeometry = action('removeSelectedGeometry', (s: AppState) => produce(s, draft => {
+    const selection = s.scene.selection;
+    if (selection?.type !== 'geometry') {
+        return;
+    }
+    const owner = getOwner(draft, selection.objectId);
+    owner.geometries = owner.geometries.filter(g => g.geometryId !== selection.geometryId);
+    draft.scene.selection = { type: 'object', objectId: selection.objectId };
+}));
+
 function getOwner(draft: WritableDraft<AppState>, ownerId: string): WritableDraft<WorldObject> {
     const owner = draft.scene.objects.find(o => o.guid === ownerId);
     if (owner == null) {

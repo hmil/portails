@@ -33,7 +33,8 @@ export class SerializerService {
         return {
             name: sprite.properties.name,
             src: sprite.properties.src,
-            transform: this.serializeTransform(sprite.properties.transform)
+            transform: this.serializeTransform(sprite.properties.transform),
+            background: sprite.properties.background
         }
     }
 

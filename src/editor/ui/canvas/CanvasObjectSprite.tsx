@@ -6,6 +6,7 @@ import { CanvasSprite } from './CanvasSprite';
 
 export interface CanvasObjectProps {
     model: WorldObject;
+    background: boolean;
     dispatch: React.Dispatch<ObjectActions | SpriteActions | GeometryActions | UndoActions>;
 }
 
@@ -14,7 +15,9 @@ export function CanvasObjectSprite(props: CanvasObjectProps) {
     return <g transform={`scale(${transform.scaleY} ${transform.scaleY}) translate(${transform.x} ${transform.y})`}>
         <title>{props.model.properties.name}</title>
 
-        { props.model.sprites.map(sprite => <CanvasSprite
+        { props.model.sprites
+            .filter(sprite => sprite.properties.background === props.background)
+            .map(sprite => <CanvasSprite
                 sprite={sprite}
                 parent={props.model}
                 key={sprite.spriteId}

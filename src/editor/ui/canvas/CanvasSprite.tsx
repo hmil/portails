@@ -39,7 +39,7 @@ export function CanvasSprite(props: CanvasSpriteProps) {
             height={height}
             x={x}
             y={y}
-            fill={'#f00'} fillOpacity="0.5"></rect> : undefined}
+            fill={'#f00'} fillOpacity="0.2"></rect> : undefined}
     </g>;
 }
 

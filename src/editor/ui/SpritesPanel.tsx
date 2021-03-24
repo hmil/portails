@@ -1,6 +1,6 @@
 import { StateContext } from 'editor/context/StateContext';
 import { ObjectSprite } from 'editor/model/sprite';
-import { createSprite, pushSceneToUndoStack, removeSelectedSprite } from 'editor/state/actions';
+import { createSprite, duplicateSelectedSprite, pushSceneToUndoStack, removeSelectedSprite } from 'editor/state/actions';
 import { AppActions } from 'editor/state/reducer';
 import { getSelectedObject } from 'editor/state/selectors';
 import { SceneSelection } from 'editor/state/state';
@@ -40,6 +40,12 @@ export function SpritesPanel() {
                     dispatch(pushSceneToUndoStack());
                     dispatch(removeSelectedSprite());
                 }} value="-" tooltip="Remove sprite"></Button>
+                <Button disabled={state.scene.selection?.type !== 'sprite'} onClick={() => {
+                    const guid = String(uniqId());
+                    setFreshSprite(guid);
+                    dispatch(pushSceneToUndoStack());
+                    dispatch(duplicateSelectedSprite({ newId: guid }));
+                }} value="dup" tooltip="Duplicate sprite"></Button>
             </div>
         </> }
     </div>;

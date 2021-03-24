@@ -59,7 +59,8 @@ export function Canvas() {
     return (
         <div ref={canvasEl} className="canvas">
             <svg viewBox={viewBox} className="canvas-svg">
-                { state.scene.objects.map(object => <CanvasObjectSprite model={object} dispatch={dispatch} key={object.guid}></CanvasObjectSprite>) }
+                { state.scene.objects.map(object => <CanvasObjectSprite background={true} model={object} dispatch={dispatch} key={object.guid}></CanvasObjectSprite>) }
+                { state.scene.objects.map(object => <CanvasObjectSprite background={false} model={object} dispatch={dispatch} key={object.guid}></CanvasObjectSprite>) }
                 { state.scene.objects.map(object => <CanvasObjectGeometry selection={state.scene.selection} model={object} dispatch={dispatch} key={object.guid}></CanvasObjectGeometry>) }
                 { state.scene.objects.map(object => <ObjectManipulator model={object} dispatch={dispatch} selection={state.scene.selection} key={object.guid}></ObjectManipulator>) }
                 { currentSprite != null ? <SpriteManipulator sprite={currentSprite}></SpriteManipulator> : undefined }

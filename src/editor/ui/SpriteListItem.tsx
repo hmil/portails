@@ -19,14 +19,14 @@ export interface SpriteListItemProps {
 export function SpriteListItem(props: SpriteListItemProps) {
 
     const selectCallback = selectSpriteCallback(props.dispatch, props.sprite);
-    const changeNameCallback = editSpriteNameCallback(props.dispatch, props.sprite)
+    const changeNameCallback = editSpriteNameCallback(props.dispatch, props.sprite);
 
     return <ListItem
         onClick={selectCallback}
         selected={props.selected}
     >
         <img className="sprite-list-item" src={props.sprite.properties.src} />
-        <EditableText onFocus={() => props.dispatch(selectSprite(props.sprite))} forceEditing={props.fresh ? true : undefined} value={props.sprite.properties.name} onChange={changeNameCallback}></EditableText>
+        <EditableText onFocus={() => props.dispatch(selectSprite(props.sprite))} forceEditing={props.fresh} value={props.sprite.properties.name} onChange={changeNameCallback}></EditableText>
     </ListItem>;
 }
 

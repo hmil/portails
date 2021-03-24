@@ -1,5 +1,6 @@
 import { computeObjectBoundingBox, WorldObject } from 'editor/model/object';
 import { ObjectSpriteProperties, spriteDefaults } from 'editor/model/sprite';
+import { uniqId } from 'editor/utils/uid';
 import produce from 'immer';
 import { WritableDraft } from 'immer/dist/internal';
 
@@ -38,6 +39,33 @@ export const removeSelectedSprite = action('removeSelectedSprite', (s: AppState)
     draft.scene.selection = { type: 'object', objectId: selection.objectId };
 }));
 
+export const duplicateSelectedSprite = action('duplicateSelectedSprite', (s: AppState, data: { newId: string }) => produce(s, draft => {
+    const selection = s.scene.selection;
+    if (selection?.type !== 'sprite') {
+        return;
+    }
+    const owner = getOwner(draft, selection.objectId);
+    const sprite = owner.sprites.find(s => s.spriteId === selection.spriteId);
+    if (sprite == null) {
+        return;
+    }
+    const newSprite = produce(sprite, spriteDraft => {
+        spriteDraft.properties.name = createNameDuplicate(sprite.properties.name);
+        spriteDraft.spriteId = data.newId;
+    });
+    owner.sprites.push(newSprite);
+    draft.scene.selection = { type: 'sprite', objectId: selection.objectId, spriteId: data.newId };
+}));
+
+
+function createNameDuplicate(name: string) {
+    const match = name.match(/^(.+)(\d+)$/);
+    if (match == null) {
+        return `${name} 1`;
+    }
+    const number = Number(match[2]);
+    return match[1] + (number + 1);
+}
 
 function getOwner(draft: WritableDraft<AppState>, ownerId: string): WritableDraft<WorldObject> {
     const owner = draft.scene.objects.find(o => o.guid === ownerId);

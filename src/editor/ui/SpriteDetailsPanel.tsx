@@ -23,7 +23,7 @@ export function SpriteDetailsPanel(props: SpriteDetailsPanelProps) {
                     dispatch(pushSceneToUndoStack());
                     dispatch(editSprite(produce(props.sprite, draft => {
                         draft.properties.src = value
-                    })))
+                    })));
                 }} id="sprite-src"></TextInput>
             </div>
             <div className="ui-form-row">
@@ -32,7 +32,7 @@ export function SpriteDetailsPanel(props: SpriteDetailsPanelProps) {
                     dispatch(pushSceneToUndoStack());
                     dispatch(editSprite(produce(props.sprite, draft => {
                         draft.properties.transform.scaleX = Number(value)
-                    })))
+                    })));
                 }} id="sprite-width"></TextInput>
             </div>
             <div className="ui-form-row">
@@ -41,8 +41,23 @@ export function SpriteDetailsPanel(props: SpriteDetailsPanelProps) {
                     dispatch(pushSceneToUndoStack());
                     dispatch(editSprite(produce(props.sprite, draft => {
                         draft.properties.transform.scaleY = Number(value)
-                    })))
+                    })));
                 }} id="sprite-height"></TextInput>
+            </div>
+            <div className="ui-form-row">
+                <label className="label" htmlFor="sprite-height">background</label>
+                <input type="checkbox" checked={props.sprite.properties.background} onChange={(evt) => {
+                    dispatch(pushSceneToUndoStack());
+                    dispatch(editSprite(produce(props.sprite, draft => {
+                        draft.properties.background = evt.target.checked;
+                    })));
+                }} />
+                {/* <TextInput value={String(props.sprite.properties.transform.scaleY)} type="number" onChange={(value) => {
+                    dispatch(pushSceneToUndoStack());
+                    dispatch(editSprite(produce(props.sprite, draft => {
+                        draft.properties.transform.scaleY = Number(value)
+                    })))
+                }} id="sprite-height"></TextInput> */}
             </div>
         </div>
         <div style={{ overflow: 'auto'}}>

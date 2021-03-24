@@ -1,6 +1,6 @@
 import { StateContext } from 'editor/context/StateContext';
 import { ObjectGeometry } from 'editor/model/geometry';
-import { createGeometry, createSprite, pushSceneToUndoStack } from 'editor/state/actions';
+import { createGeometry, createSprite, pushSceneToUndoStack, removeSelectedGeometry } from 'editor/state/actions';
 import { AppActions } from 'editor/state/reducer';
 import { getSelectedObject } from 'editor/state/selectors';
 import { SceneSelection } from 'editor/state/state';
@@ -36,6 +36,10 @@ export function GeometriesPanel() {
                         geometryId: guid
                     }));
                 }} value="+" tooltip="Add geometry"></Button>
+                <Button disabled={state.scene.selection?.type !== 'geometry'} onClick={() => {
+                    dispatch(pushSceneToUndoStack());
+                    dispatch(removeSelectedGeometry());
+                }} value="-" tooltip="Remove geometry"></Button>
             </div>
         </> }
     </div>;

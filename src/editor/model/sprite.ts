@@ -4,6 +4,7 @@ export interface ObjectSpriteProperties {
     src: string;
     transform: Transform;
     name: string;
+    background: boolean;
 }
 
 export interface ObjectSprite {
@@ -18,7 +19,8 @@ export function spriteDefaults(ownerId: string, spriteId: string): ObjectSprite 
         properties: {
             src: '/static/tiles-pack-1/Tile (1).png',
             name: 'unnamed',
-            transform: transformDefaults()
+            transform: transformDefaults(),
+            background: false,
         }
     }
 }
