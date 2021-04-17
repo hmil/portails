@@ -1,6 +1,6 @@
-import { ServicesContext } from 'editor/context/ServicesContext';
 import { StateContext } from 'editor/context/StateContext';
 import { ObjectGeometry } from 'editor/model/geometry';
+import { DisplayServiceModule } from 'editor/services/DisplayService';
 import { GeometryActions, UndoActions } from 'editor/state/actions';
 import * as React from 'react';
 
@@ -15,7 +15,7 @@ export interface GeometryManipulatorProps {
 export function GeometryManipulator(props: GeometryManipulatorProps) {
     
     const { state } = React.useContext(StateContext);
-    const { displayService } = React.useContext(ServicesContext);
+    const displayService = DisplayServiceModule.get();
     
     const strokeWidth = displayService.zoomIndependentLength(1);
 

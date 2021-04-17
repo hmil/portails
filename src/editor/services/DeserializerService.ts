@@ -5,6 +5,7 @@ import { computeObjectBoundingBox, WorldObject } from 'editor/model/object';
 import { Scene } from 'editor/model/scene';
 import { ObjectSprite } from 'editor/model/sprite';
 import { uniqId } from 'editor/utils/uid';
+import { createServiceModule } from './injector';
 
 export class DeserializerService {
 
@@ -76,3 +77,5 @@ export class DeserializerService {
         };
     }
 }
+
+export const DeserializerServiceModule = createServiceModule(DeserializerService);

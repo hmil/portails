@@ -1,19 +1,27 @@
-import { ServicesContext } from "editor/context/ServicesContext";
-import { StateContext } from "editor/context/StateContext";
-import { ObjectSprite } from "editor/model/sprite";
-import { editSprite, pushSceneToUndoStack } from "editor/state/actions";
-import produce from "immer";
-import * as React from "react";
-import { CONTROL_COLOR } from "./colors";
-import { ControlRect } from "./ControlRect";
+import { StateContext } from 'editor/context/StateContext';
+import { Transform, Vertex } from 'editor/model/geometry';
+import { ObjectSprite } from 'editor/model/sprite';
+import { DisplayServiceModule } from 'editor/services/DisplayService';
+import { memo } from 'editor/ui/hooks/utils';
+import { mat3, vec2 } from 'gl-matrix';
+import * as React from 'react';
+
+import { CONTROL_COLOR } from './colors';
+import { ResizeControlPoint } from './ResizeControlPoint';
+import { RotateControlPoint } from './RotateControlPoint';
 
 export interface SpriteManipulatorProps {
     sprite: ObjectSprite;
 }
 
+export interface ResizeData {
+    startOffset: Vertex;
+    startTransform: Transform;
+}
+
 export function SpriteManipulator(props: SpriteManipulatorProps) {
     
-    const { displayService } = React.useContext(ServicesContext);
+    const displayService = DisplayServiceModule.get();
     const { state, dispatch } = React.useContext(StateContext);
 
     const parentTransform = state.scene.objects.find(obj => obj.guid === props.sprite.ownerId)?.properties.transform;
@@ -25,61 +33,43 @@ export function SpriteManipulator(props: SpriteManipulatorProps) {
     const height = parentTransform.scaleY * props.sprite.properties.transform.scaleY;
     const x = parentTransform.x + props.sprite.properties.transform.x * parentTransform.scaleX - width/2;
     const y = parentTransform.y + props.sprite.properties.transform.y * parentTransform.scaleY - height / 2;
+    const mirrorX = width < 0;
+    const mirrorY = height < 0;
+    const rotationDegrees = props.sprite.properties.transform.rotation * 180 / Math.PI;
 
-    function startResize(evt: React.MouseEvent) {
+    const strokeWidth = displayService.zoomIndependentLength(1);
+    const rotateArmLength = displayService.zoomIndependentLength(20);
 
-        const mappedCoords = displayService.screenCoordsToWorldCoords({ x: evt.clientX, y: evt.clientY });
+    const objTsm = matrixTransform(parentTransform);
+    const spriteTsfm = matrixTransform(props.sprite.properties.transform);
 
-        const startX = Math.abs(mappedCoords.x - props.sprite.properties.transform.x);
-        const startY = Math.abs(mappedCoords.y - props.sprite.properties.transform.y);
-
-        function onUp(evt: MouseEvent) {
-            onMove(evt);
-            window.removeEventListener('mouseup', onUp);
-            window.removeEventListener('mousemove', onMove);
-        }
-        
-        function onMove(evt: MouseEvent) {
-            evt.preventDefault();
-            evt.stopPropagation();
-
-            const mappedCoords = displayService.screenCoordsToWorldCoords({ x: evt.clientX, y: evt.clientY });
-
-            dispatch(editSprite(produce(props.sprite, draft => {
-                const fX = (Math.abs(mappedCoords.x - props.sprite.properties.transform.x) - startX) * 2;
-                const fY = (Math.abs(mappedCoords.y - props.sprite.properties.transform.y) - startY) * 2
-                const f = Math.max(fX, fY);
-                if (evt.ctrlKey || evt.metaKey) { // Proportional mode
-                    draft.properties.transform.scaleX += f;
-                    draft.properties.transform.scaleY += f;
-                } else if (evt.shiftKey) { // 1D mode
-                    if (fX > fY) {
-                        draft.properties.transform.scaleX += fX;
-                    } else {
-                        draft.properties.transform.scaleY += fY;
-                    }
-                } else {
-                    draft.properties.transform.scaleX += fX;
-                    draft.properties.transform.scaleY += fY;
-                }
-            })));
-        }
-
-        dispatch(pushSceneToUndoStack());
-        window.addEventListener('mouseup', onUp);
-        window.addEventListener('mousemove', onMove);
-    }
+    const tsfm = mat3.mul(mat3.create(), objTsm, spriteTsfm);
+    const transformString = `matrix(${tsfm[0]}, ${tsfm[1]}, ${tsfm[3]}, ${tsfm[4]}, ${tsfm[6]}, ${tsfm[7]})`;
 
     return <g>
-        <rect x={x} y={y} width={width} height={height}
-            fill="none" stroke={CONTROL_COLOR} strokeWidth={displayService.zoomIndependentLength(1)}></rect>
-        <ControlRect onMouseDown={startResize} direction="nw" x={x} y={y}></ControlRect>
-        <ControlRect onMouseDown={startResize} direction="ne" x={x + width} y={y}></ControlRect>
-        <ControlRect onMouseDown={startResize} direction="se" x={x + width} y={y + height}></ControlRect>
-        <ControlRect onMouseDown={startResize} direction="sw" x={x} y={y + height}></ControlRect>
-        {/* <ControlRect direction="n" x={x + width/2} y={y}></ControlRect>
-        <ControlRect direction="e" x={x + width} y={y + height/2}></ControlRect>
-        <ControlRect direction="s" x={x + width/2} y={y + height}></ControlRect>
-        <ControlRect direction="w" x={x} y={y + height / 2}></ControlRect> */}
+        <rect width={Math.abs(width)} height={Math.abs(height)}
+            transform={`translate(${x}, ${y}) translate(${width/2}, ${height/2}) rotate(${rotationDegrees}) translate(${-width/2}, ${-height/2}) scale(${mirrorX ? -1 : 1}, ${mirrorY ? -1 : 1})`}
+            fill="none" stroke={CONTROL_COLOR} strokeWidth={strokeWidth}></rect>
+        <ResizeControlPoint transform={tsfm} dispatch={dispatch} sprite={props.sprite} direction="nw" x={-width/2} y={-height/2}></ResizeControlPoint>
+        <ResizeControlPoint transform={tsfm} dispatch={dispatch} sprite={props.sprite} direction="ne" x={width/2} y={-height/2}></ResizeControlPoint>
+        <ResizeControlPoint transform={tsfm} dispatch={dispatch} sprite={props.sprite} direction="se" x={width/2} y={height/2}></ResizeControlPoint>
+        <ResizeControlPoint transform={tsfm} dispatch={dispatch} sprite={props.sprite} direction="sw" x={-width/2} y={height/2}></ResizeControlPoint>
+        <ResizeControlPoint transform={tsfm} dispatch={dispatch} sprite={props.sprite} direction="n" x={0} y={-height/2}></ResizeControlPoint>
+        <ResizeControlPoint transform={tsfm} dispatch={dispatch} sprite={props.sprite} direction="e" x={width/2} y={0}></ResizeControlPoint>
+        <ResizeControlPoint transform={tsfm} dispatch={dispatch} sprite={props.sprite} direction="s" x={0} y={height/2}></ResizeControlPoint>
+        <ResizeControlPoint transform={tsfm} dispatch={dispatch} sprite={props.sprite} direction="w" x={-width/2} y={0}></ResizeControlPoint>
+        <line transform={transformString} x1={0} y1={-height/2} x2={0} y2={-height/2 - rotateArmLength} stroke={CONTROL_COLOR} strokeWidth={strokeWidth}></line>
+        <RotateControlPoint transform={tsfm} dispatch={dispatch} sprite={props.sprite} x={0} y={-height/2 - rotateArmLength}></RotateControlPoint>
     </g>;
 }
+
+const matrixTransform = memo((transform: Transform) => {
+    const tsfm = mat3.create();
+    const tmp = vec2.create();
+    mat3.translate(tsfm, tsfm, vec2.set(tmp, transform.x, transform.y));
+    // mat3.translate(tsfm, tsfm, vec2.set(tmp, transform.scaleX/2, transform.scaleY/2));
+    mat3.rotate(tsfm, tsfm, transform.rotation);
+    // mat3.translate(tsfm, tsfm, vec2.set(tmp, -transform.scaleX/2, -transform.scaleY/2));
+    mat3.scale(tsfm, tsfm, vec2.set(tmp, transform.scaleX < 0 ? -1 : 1, transform.scaleY < 0 ? -1 : 1));
+    return tsfm;
+});

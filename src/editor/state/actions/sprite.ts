@@ -52,6 +52,8 @@ export const duplicateSelectedSprite = action('duplicateSelectedSprite', (s: App
     const newSprite = produce(sprite, spriteDraft => {
         spriteDraft.properties.name = createNameDuplicate(sprite.properties.name);
         spriteDraft.spriteId = data.newId;
+        spriteDraft.properties.transform.x += 0.5;
+        spriteDraft.properties.transform.y += 0.25;
     });
     owner.sprites.push(newSprite);
     draft.scene.selection = { type: 'sprite', objectId: selection.objectId, spriteId: data.newId };

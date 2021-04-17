@@ -3,22 +3,18 @@ import { loadScene } from "editor/state/actions";
 import { AppActions } from "editor/state/reducer";
 import { DeserializerService } from "./DeserializerService";
 import { DownloadService } from "./DownloadService";
+import { createServiceModule } from "./injector";
 import { SerializerService } from "./SerializerService";
 
 export class PersistenceService {
     
-    private dispatch: React.Dispatch<AppActions> = () => {};
-    private scene?: Scene;
-
     constructor(
+            private readonly scene: Scene,
+            private readonly dispatch: React.Dispatch<AppActions>,
             private readonly serializerService: SerializerService,
             private readonly deserializerService: DeserializerService,
             private readonly downloadService: DownloadService) {}
 
-    sync(scene: Scene, dispatch: React.Dispatch<AppActions>) {
-        this.dispatch = dispatch;
-        this.scene = scene;
-    }
 
     save = () => {
         if (this.scene == null) {
@@ -36,3 +32,5 @@ export class PersistenceService {
         this.dispatch(loadScene({scene}));
     }
 }
+
+export const PersistenceServiceModule = createServiceModule(PersistenceService);

@@ -3,10 +3,16 @@ import produce from "immer";
 import { action } from "../action-factory";
 import { AppState } from "../state";
 
-export const createObject = action('createObject', (s: AppState, data: { guid: string }) => produce(s, draft => {
+export const createObject = action('createObject', (s: AppState, data: { guid: string, properties?: Partial<WorldObjectProperties> }) => produce(s, draft => {
     draft.scene.selection = { type: 'object', objectId: data.guid };
     const newObject = worldObjectDefaults(data.guid);
     newObject.properties.name = 'New Object ' + data.guid;
+    if (data.properties) {
+        newObject.properties = {
+            ...newObject.properties,
+            ...data.properties
+        };
+    }
     draft.scene.objects.push(newObject);
 }));
 
@@ -42,3 +48,13 @@ export const lowerSelectedObject = action('lowerSelectedObject', (s: AppState) =
         draft.scene.objects.splice(objectIndex, 2, draft.scene.objects[objectIndex + 1], draft.scene.objects[objectIndex]);
     }
 }));
+
+export const removeSelectedObject = action('removeSelectedObject', (s: AppState) => produce(s, draft => {
+    const selection = s.scene.selection;
+    if (selection?.type !== 'object') {
+        return;
+    }
+    draft.scene.objects = draft.scene.objects.filter(o => o.guid !== selection.objectId);
+    draft.scene.selection = null;
+}));
+

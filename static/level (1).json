@@ -1,0 +1,922 @@
+{
+    "objects": [
+        {
+            "name": "Background",
+            "transform": {
+                "a": 0,
+                "x": 0,
+                "y": 3.9999999999999996,
+                "sX": 1,
+                "sY": 1
+            },
+            "sprites": [
+                {
+                    "name": "Background",
+                    "src": "/static/tile-pack-2/background/background.png",
+                    "transform": {
+                        "a": 0,
+                        "x": -1,
+                        "y": 0.3000000000000007,
+                        "sX": 16,
+                        "sY": 12.600000000000001
+                    },
+                    "background": true
+                },
+                {
+                    "name": "Background 1",
+                    "src": "/static/tile-pack-2/background/background.png",
+                    "transform": {
+                        "a": 0,
+                        "x": 14.701941389739574,
+                        "y": 0.3000000000000007,
+                        "sX": 16,
+                        "sY": 12.600000000000001
+                    },
+                    "background": true
+                },
+                {
+                    "name": "Background 1",
+                    "src": "/static/tile-pack-2/background/background.png",
+                    "transform": {
+                        "a": 0,
+                        "x": -1,
+                        "y": -12.3,
+                        "sX": 16,
+                        "sY": 12.600000000000001
+                    },
+                    "background": true
+                },
+                {
+                    "name": "Background 2",
+                    "src": "/static/tile-pack-2/background/background.png",
+                    "transform": {
+                        "a": 0,
+                        "x": 15,
+                        "y": -12.3,
+                        "sX": 16,
+                        "sY": 12.600000000000001
+                    },
+                    "background": true
+                },
+                {
+                    "name": "Background 1",
+                    "src": "/static/tile-pack-2/background/background.png",
+                    "transform": {
+                        "a": 0,
+                        "x": -17,
+                        "y": 0.3000000000000007,
+                        "sX": 16,
+                        "sY": 12.600000000000001
+                    },
+                    "background": true
+                },
+                {
+                    "name": "Background 2",
+                    "src": "/static/tile-pack-2/background/background.png",
+                    "transform": {
+                        "a": 0,
+                        "x": -17,
+                        "y": 12.7,
+                        "sX": 16,
+                        "sY": 12.600000000000001
+                    },
+                    "background": true
+                },
+                {
+                    "name": "Background 3",
+                    "src": "/static/tile-pack-2/background/background.png",
+                    "transform": {
+                        "a": 0,
+                        "x": -0.9999999999999991,
+                        "y": 12.7,
+                        "sX": 16,
+                        "sY": 12.600000000000001
+                    },
+                    "background": true
+                },
+                {
+                    "name": "Background 4",
+                    "src": "/static/tile-pack-2/background/background.png",
+                    "transform": {
+                        "a": 0,
+                        "x": 15,
+                        "y": 12.7,
+                        "sX": 16,
+                        "sY": 12.600000000000001
+                    },
+                    "background": true
+                },
+                {
+                    "name": "Background 2",
+                    "src": "/static/tile-pack-2/background/background.png",
+                    "transform": {
+                        "a": 0,
+                        "x": -17,
+                        "y": -12.3,
+                        "sX": 16,
+                        "sY": 12.600000000000001
+                    },
+                    "background": true
+                }
+            ],
+            "geometries": []
+        },
+        {
+            "name": "Floor2",
+            "transform": {
+                "a": 0,
+                "x": 6,
+                "y": 5,
+                "sX": 1,
+                "sY": 1
+            },
+            "sprites": [
+                {
+                    "name": "Floor 1",
+                    "src": "/static/tile-pack-2/tiles/top.png",
+                    "transform": {
+                        "a": 0,
+                        "x": 0.5,
+                        "y": -1.5,
+                        "sX": 1,
+                        "sY": 1
+                    },
+                    "background": false
+                },
+                {
+                    "name": "Floor 2",
+                    "src": "/static/tile-pack-2/tiles/horizontal_to_vertical_end_left.png",
+                    "transform": {
+                        "a": 0,
+                        "x": 1.5,
+                        "y": -1.5,
+                        "sX": 1,
+                        "sY": 1
+                    },
+                    "background": false
+                },
+                {
+                    "name": "Floor 3",
+                    "src": "/static/tile-pack-2/tiles/left_edge.png",
+                    "transform": {
+                        "a": 0,
+                        "x": 1.5,
+                        "y": -2.5,
+                        "sX": 1,
+                        "sY": 1
+                    },
+                    "background": false
+                },
+                {
+                    "name": "Floor 4",
+                    "src": "/static/tile-pack-2/tiles/left_edge.png",
+                    "transform": {
+                        "a": 0,
+                        "x": 1.5,
+                        "y": -3.5,
+                        "sX": 1,
+                        "sY": 1
+                    },
+                    "background": false
+                },
+                {
+                    "name": "my sprite",
+                    "src": "/static/tile-pack-2/tiles/top.png",
+                    "transform": {
+                        "a": 0,
+                        "x": -0.5,
+                        "y": -1.5,
+                        "sX": 1,
+                        "sY": 1
+                    },
+                    "background": false
+                }
+            ],
+            "geometries": []
+        },
+        {
+            "name": "Wall1",
+            "transform": {
+                "a": 0,
+                "x": -4,
+                "y": 5,
+                "sX": 1,
+                "sY": 1
+            },
+            "sprites": [
+                {
+                    "name": "Wall",
+                    "src": "/static/tile-pack-2/tiles/right_edge.png",
+                    "transform": {
+                        "a": 0,
+                        "x": 1.5,
+                        "y": 0.5,
+                        "sX": 1,
+                        "sY": 1
+                    },
+                    "background": false
+                },
+                {
+                    "name": "Wall",
+                    "src": "/static/tile-pack-2/tiles/right_edge.png",
+                    "transform": {
+                        "a": 0,
+                        "x": 1.4999999999999998,
+                        "y": -0.5,
+                        "sX": 1,
+                        "sY": 1
+                    },
+                    "background": false
+                },
+                {
+                    "name": "my sprite",
+                    "src": "/static/tile-pack-2/tiles/top_right.png",
+                    "transform": {
+                        "a": 0,
+                        "x": 1.5,
+                        "y": -1.5000000000000004,
+                        "sX": 1,
+                        "sY": 1
+                    },
+                    "background": false
+                },
+                {
+                    "name": "my sprite",
+                    "src": "/static/tile-pack-2/tiles/single_pillar_right.png",
+                    "transform": {
+                        "a": 0,
+                        "x": -1.5,
+                        "y": -3.5,
+                        "sX": 1,
+                        "sY": 1
+                    },
+                    "background": false
+                },
+                {
+                    "name": "my sprite 1",
+                    "src": "/static/tile-pack-2/tiles/single_pillar_right.png",
+                    "transform": {
+                        "a": 0,
+                        "x": -0.5,
+                        "y": -3.5,
+                        "sX": 1,
+                        "sY": 1
+                    },
+                    "background": false
+                },
+                {
+                    "name": "my sprite 2",
+                    "src": "/static/tile-pack-2/tiles/single_pillar_right.png",
+                    "transform": {
+                        "a": 0,
+                        "x": 0.5,
+                        "y": -3.5,
+                        "sX": 1,
+                        "sY": 1
+                    },
+                    "background": false
+                },
+                {
+                    "name": "my sprite 3",
+                    "src": "/static/tile-pack-2/tiles/single_pillar_right.png",
+                    "transform": {
+                        "a": 0,
+                        "x": 1.5,
+                        "y": -3.5,
+                        "sX": 1,
+                        "sY": 1
+                    },
+                    "background": false
+                },
+                {
+                    "name": "my sprite 4",
+                    "src": "/static/tile-pack-2/tiles/single_pillar_right.png",
+                    "transform": {
+                        "a": 0,
+                        "x": 2.5,
+                        "y": -3.4999999999999996,
+                        "sX": 1,
+                        "sY": 1
+                    },
+                    "background": false
+                },
+                {
+                    "name": "my sprite",
+                    "src": "/static/tile-pack-2/tiles/single_pillar_right_end.png",
+                    "transform": {
+                        "a": 0,
+                        "x": 3.5,
+                        "y": -3.5,
+                        "sX": 1,
+                        "sY": 1
+                    },
+                    "background": false
+                },
+                {
+                    "name": "my sprite",
+                    "src": "/static/tile-pack-2/tiles/single_pillar_right_join.png",
+                    "transform": {
+                        "a": 0,
+                        "x": -2.5,
+                        "y": -3.5,
+                        "sX": 1,
+                        "sY": 1
+                    },
+                    "background": false
+                },
+                {
+                    "name": "my sprite",
+                    "src": "/static/tile-pack-2/tiles/right_edge.png",
+                    "transform": {
+                        "a": 0,
+                        "x": -2.5,
+                        "y": -2.5,
+                        "sX": 1,
+                        "sY": 1
+                    },
+                    "background": false
+                },
+                {
+                    "name": "my sprite",
+                    "src": "/static/tile-pack-2/tiles/right_edge.png",
+                    "transform": {
+                        "a": 0,
+                        "x": -2.5,
+                        "y": -1.5,
+                        "sX": 1,
+                        "sY": 1
+                    },
+                    "background": false
+                },
+                {
+                    "name": "my sprite 1",
+                    "src": "/static/tile-pack-2/tiles/right_edge.png",
+                    "transform": {
+                        "a": 0,
+                        "x": -2.5,
+                        "y": -0.5,
+                        "sX": 1,
+                        "sY": 1
+                    },
+                    "background": false
+                },
+                {
+                    "name": "my sprite 2",
+                    "src": "/static/tile-pack-2/tiles/right_edge.png",
+                    "transform": {
+                        "a": 0,
+                        "x": -2.5,
+                        "y": 0.5,
+                        "sX": 1,
+                        "sY": 1
+                    },
+                    "background": false
+                },
+                {
+                    "name": "my sprite",
+                    "src": "/static/tile-pack-2/tiles/bottom_left_inner.png",
+                    "transform": {
+                        "a": 0,
+                        "x": -2.5,
+                        "y": 1.5,
+                        "sX": 1,
+                        "sY": 1
+                    },
+                    "background": false
+                },
+                {
+                    "name": "my sprite",
+                    "src": "/static/tile-pack-2/tiles/top.png",
+                    "transform": {
+                        "a": 0,
+                        "x": -1.5,
+                        "y": 1.5,
+                        "sX": 1,
+                        "sY": 1
+                    },
+                    "background": false
+                },
+                {
+                    "name": "my sprite",
+                    "src": "/static/tile-pack-2/tiles/top.png",
+                    "transform": {
+                        "a": 0,
+                        "x": -0.5,
+                        "y": 1.5,
+                        "sX": 1,
+                        "sY": 1
+                    },
+                    "background": false
+                },
+                {
+                    "name": "my sprite",
+                    "src": "/static/tile-pack-2/tiles/horizontal_to_vertical_end_left.png",
+                    "transform": {
+                        "a": 0,
+                        "x": 0.4999999999999991,
+                        "y": 1.5,
+                        "sX": 1,
+                        "sY": 1
+                    },
+                    "background": false
+                },
+                {
+                    "name": "my sprite",
+                    "src": "/static/tile-pack-2/tiles/left_edge.png",
+                    "transform": {
+                        "a": 0,
+                        "x": 0.4999999999999991,
+                        "y": 0.5,
+                        "sX": 1,
+                        "sY": 1
+                    },
+                    "background": false
+                },
+                {
+                    "name": "my sprite 1",
+                    "src": "/static/tile-pack-2/tiles/left_edge.png",
+                    "transform": {
+                        "a": 0,
+                        "x": 0.5,
+                        "y": -0.5,
+                        "sX": 1,
+                        "sY": 1
+                    },
+                    "background": false
+                },
+                {
+                    "name": "my sprite",
+                    "src": "/static/tile-pack-2/tiles/top_left.png",
+                    "transform": {
+                        "a": 0,
+                        "x": 0.5,
+                        "y": -1.5000000000000004,
+                        "sX": 1,
+                        "sY": 1
+                    },
+                    "background": false
+                }
+            ],
+            "geometries": [
+                {
+                    "name": "Wall",
+                    "vertices": [
+                        {
+                            "x": 3.9046013288003474,
+                            "y": -3.991370247218132
+                        },
+                        {
+                            "x": 3.9046013288003465,
+                            "y": -3.015219915018046
+                        },
+                        {
+                            "x": -2.1583768456424144,
+                            "y": -3.0260660298202695
+                        },
+                        {
+                            "x": -2.140999492428902,
+                            "y": 1.0433844592088928
+                        },
+                        {
+                            "x": 0.14099949242890153,
+                            "y": 1.030380906211204
+                        },
+                        {
+                            "x": 0.15293889933970783,
+                            "y": -1.9841809835388369
+                        },
+                        {
+                            "x": 1.8792587636791778,
+                            "y": -1.983901168490557
+                        },
+                        {
+                            "x": 1.8604649671879927,
+                            "y": 0.9999999999999999
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "Floor1",
+            "transform": {
+                "a": 0,
+                "x": -3,
+                "y": 6,
+                "sX": 1,
+                "sY": 1
+            },
+            "sprites": [
+                {
+                    "name": "unnamed",
+                    "src": "/static/tile-pack-2/tiles/horizontal_to_vertical_end_right.png",
+                    "transform": {
+                        "a": 0,
+                        "x": 0.5,
+                        "y": 0.5,
+                        "sX": 1,
+                        "sY": 1
+                    },
+                    "background": false
+                },
+                {
+                    "name": "floor",
+                    "src": "/static/tile-pack-2/tiles/top.png",
+                    "transform": {
+                        "a": 0,
+                        "x": 1.5,
+                        "y": 0.5,
+                        "sX": 1,
+                        "sY": 1
+                    },
+                    "background": false
+                },
+                {
+                    "name": "floor",
+                    "src": "/static/tile-pack-2/tiles/top.png",
+                    "transform": {
+                        "a": 0,
+                        "x": 2.5,
+                        "y": 0.5,
+                        "sX": 1,
+                        "sY": 1
+                    },
+                    "background": false
+                },
+                {
+                    "name": "New Sprite 4",
+                    "src": "/static/tile-pack-2/tiles/steep_slope_left_01.png",
+                    "transform": {
+                        "a": 0,
+                        "x": 3.5,
+                        "y": 0.5,
+                        "sX": 1,
+                        "sY": 1
+                    },
+                    "background": false
+                },
+                {
+                    "name": "New Sprite 5",
+                    "src": "/static/tile-pack-2/tiles/steep_slope_left_02.png",
+                    "transform": {
+                        "a": 0,
+                        "x": 3.5,
+                        "y": -0.5,
+                        "sX": 1,
+                        "sY": 1
+                    },
+                    "background": false
+                },
+                {
+                    "name": "New Sprite 6",
+                    "src": "/static/tile-pack-2/tiles/shallow_slope_left_01.png",
+                    "transform": {
+                        "a": 0,
+                        "x": 4.5,
+                        "y": -0.5,
+                        "sX": 1,
+                        "sY": 1
+                    },
+                    "background": false
+                },
+                {
+                    "name": "New Sprite 7",
+                    "src": "/static/tile-pack-2/tiles/shallow_slope_left_02.png",
+                    "transform": {
+                        "a": 0,
+                        "x": 4.5,
+                        "y": -1.5,
+                        "sX": 1,
+                        "sY": 1
+                    },
+                    "background": false
+                },
+                {
+                    "name": "New Sprite 8",
+                    "src": "/static/tile-pack-2/tiles/shallow_slope_left_03.png",
+                    "transform": {
+                        "a": 0,
+                        "x": 5.5,
+                        "y": -1.5,
+                        "sX": 1,
+                        "sY": 1
+                    },
+                    "background": false
+                },
+                {
+                    "name": "New Sprite 9",
+                    "src": "/static/tile-pack-2/tiles/shallow_slope_left_01.png",
+                    "transform": {
+                        "a": 0,
+                        "x": 6.5,
+                        "y": -1.5,
+                        "sX": 1,
+                        "sY": 1
+                    },
+                    "background": false
+                },
+                {
+                    "name": "New Sprite 10",
+                    "src": "/static/tile-pack-2/tiles/fill.png",
+                    "transform": {
+                        "a": 0,
+                        "x": 6,
+                        "y": 0,
+                        "sX": 2,
+                        "sY": 2
+                    },
+                    "background": false
+                },
+                {
+                    "name": "New Sprite 11",
+                    "src": "/static/tile-pack-2/tiles/fill.png",
+                    "transform": {
+                        "a": 0,
+                        "x": 4.5,
+                        "y": 0.5,
+                        "sX": 1,
+                        "sY": 1
+                    },
+                    "background": false
+                },
+                {
+                    "name": "New Sprite 16",
+                    "src": "/static/tile-pack-2/tiles/shallow_slope_left_02.png",
+                    "transform": {
+                        "a": 0,
+                        "x": 6.5,
+                        "y": -2.5,
+                        "sX": 1,
+                        "sY": 1
+                    },
+                    "background": false
+                },
+                {
+                    "name": "New Sprite 17",
+                    "src": "/static/tile-pack-2/tiles/shallow_slope_left_03.png",
+                    "transform": {
+                        "a": 0,
+                        "x": 7.5,
+                        "y": -2.5,
+                        "sX": 1,
+                        "sY": 1
+                    },
+                    "background": false
+                },
+                {
+                    "name": "New Sprite 22",
+                    "src": "/static/tile-pack-2/tiles/fill.png",
+                    "transform": {
+                        "a": 0,
+                        "x": 8,
+                        "y": -0.5,
+                        "sX": 2,
+                        "sY": 3
+                    },
+                    "background": false
+                },
+                {
+                    "name": "New Sprite 23",
+                    "src": "/static/tile-pack-2/tiles/fill.png",
+                    "transform": {
+                        "a": 0,
+                        "x": 10,
+                        "y": -0.5,
+                        "sX": 2,
+                        "sY": 3
+                    },
+                    "background": false
+                },
+                {
+                    "name": "New Sprite 24",
+                    "src": "/static/tile-pack-2/tiles/fill.png",
+                    "transform": {
+                        "a": 0,
+                        "x": 12,
+                        "y": -0.5,
+                        "sX": 2,
+                        "sY": 3
+                    },
+                    "background": false
+                },
+                {
+                    "name": "New Sprite 25",
+                    "src": "/static/tile-pack-2/tiles/fill.png",
+                    "transform": {
+                        "a": 0,
+                        "x": 12,
+                        "y": -3.5,
+                        "sX": 2,
+                        "sY": 3
+                    },
+                    "background": false
+                },
+                {
+                    "name": "my sprite",
+                    "src": "/static/tile-pack-2/overlay_props/fan_overlay/fan_unit.png",
+                    "transform": {
+                        "a": 0,
+                        "x": 11.680000000000007,
+                        "y": -3.8899999999999864,
+                        "sX": 1.92578125,
+                        "sY": 1.56640625
+                    },
+                    "background": false
+                },
+                {
+                    "name": "my sprite",
+                    "src": "/static/tile-pack-2/overlay_props/fan_overlay/fan.png",
+                    "transform": {
+                        "a": 0,
+                        "x": 11.315334954850057,
+                        "y": -3.89933009029986,
+                        "sX": 0.94140625,
+                        "sY": 0.94140625
+                    },
+                    "background": false
+                },
+                {
+                    "name": "my sprite",
+                    "src": "/static/tile-pack-2/bg_overlay_props/fan/fan_unit.png",
+                    "transform": {
+                        "a": 0,
+                        "x": 2.1759953680806916,
+                        "y": -1.5,
+                        "sX": 1.92578125,
+                        "sY": 1.56640625
+                    },
+                    "background": true
+                },
+                {
+                    "name": "my sprite",
+                    "src": "/static/tile-pack-2/bg_overlay_props/fan/fan.png",
+                    "transform": {
+                        "a": 0,
+                        "x": 1.8120455283849513,
+                        "y": -1.5145943651381444,
+                        "sX": 0.94140625,
+                        "sY": 0.94140625
+                    },
+                    "background": true
+                },
+                {
+                    "name": "New Sprite 23",
+                    "src": "/static/tile-pack-2/tiles/fill.png",
+                    "transform": {
+                        "a": 0,
+                        "x": 4.78888641530893,
+                        "y": 6.475259435955607,
+                        "sX": 17.57777283061786,
+                        "sY": 11.049481128088786
+                    },
+                    "background": false
+                }
+            ],
+            "geometries": [
+                {
+                    "name": "Floor",
+                    "vertices": [
+                        {
+                            "x": 13,
+                            "y": -5
+                        },
+                        {
+                            "x": 10.135155867514223,
+                            "y": -5.012286897046748
+                        },
+                        {
+                            "x": 10.135155867514221,
+                            "y": -2.9631393088597573
+                        },
+                        {
+                            "x": 7.999999999999999,
+                            "y": -3
+                        },
+                        {
+                            "x": 3.995682473528607,
+                            "y": -0.9774626855121659
+                        },
+                        {
+                            "x": 3,
+                            "y": 0.024128904333167136
+                        },
+                        {
+                            "x": 0.8662511389707528,
+                            "y": 0.02412890433316715
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "New Object 51",
+            "transform": {
+                "a": 0,
+                "x": 0,
+                "y": -0.5,
+                "sX": 1,
+                "sY": 1
+            },
+            "sprites": [
+                {
+                    "name": "my sprite",
+                    "src": "/static/tile-pack-2/bg_overlay_props/background_overlays_14.png",
+                    "transform": {
+                        "a": 0,
+                        "x": 0.5,
+                        "y": 0.5,
+                        "sX": 0.88671875,
+                        "sY": 0.875
+                    },
+                    "background": true
+                },
+                {
+                    "name": "my sprite",
+                    "src": "/static/tile-pack-2/bg_overlay_props/background_overlays_19.png",
+                    "transform": {
+                        "a": 0,
+                        "x": 5.579999999999998,
+                        "y": 0.030000000000001137,
+                        "sX": 0.984375,
+                        "sY": 1.7890625
+                    },
+                    "background": true
+                },
+                {
+                    "name": "my sprite",
+                    "src": "/static/tile-pack-2/bg_overlay_props/background_overlays_15.png",
+                    "transform": {
+                        "a": 0,
+                        "x": -5.24609375,
+                        "y": 4.380859375,
+                        "sX": 0.4921875,
+                        "sY": 1.23828125
+                    },
+                    "background": true
+                },
+                {
+                    "name": "my sprite",
+                    "src": "/static/tile-pack-2/bg_overlay_props/background_overlays_26.png",
+                    "transform": {
+                        "a": 0,
+                        "x": -3.291015625,
+                        "y": -0.111328125,
+                        "sX": 1.41796875,
+                        "sY": 2.22265625
+                    },
+                    "background": true
+                },
+                {
+                    "name": "my sprite",
+                    "src": "/static/tile-pack-2/bg_overlay_props/background_overlays_33.png",
+                    "transform": {
+                        "a": 0,
+                        "x": 6,
+                        "y": 2.5,
+                        "sX": 0.5234375,
+                        "sY": 1.8359375
+                    },
+                    "background": true
+                },
+                {
+                    "name": "my sprite",
+                    "src": "/static/tile-pack-2/bg_overlay_props/background_overlays_36.png",
+                    "transform": {
+                        "a": 0,
+                        "x": 2.34765625,
+                        "y": 1.18359375,
+                        "sX": 1.3046875,
+                        "sY": 1.6328125
+                    },
+                    "background": true
+                },
+                {
+                    "name": "my sprite",
+                    "src": "/static/tile-pack-2/overlay_props/tile_set_overlay_16.png",
+                    "transform": {
+                        "a": 0,
+                        "x": 3.1999999999999886,
+                        "y": 6.350000000000023,
+                        "sX": 1.3046875,
+                        "sY": 1.6328125
+                    },
+                    "background": false
+                },
+                {
+                    "name": "my sprite",
+                    "src": "/static/tile-pack-2/overlay_props/tile_set_overlay_14.png",
+                    "transform": {
+                        "a": 0,
+                        "x": 7.259999999999991,
+                        "y": 4.890000000000015,
+                        "sX": 1.86328125,
+                        "sY": 1.47265625
+                    },
+                    "background": false
+                }
+            ],
+            "geometries": []
+        }
+    ],
+    "version": 2
+}

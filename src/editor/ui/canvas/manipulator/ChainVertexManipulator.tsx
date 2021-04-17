@@ -1,10 +1,12 @@
-import { ServicesContext } from "editor/context/ServicesContext";
-import { ChainGeometry, Vertex } from "editor/model/geometry";
-import { editChain, GeometryActions, pushSceneToUndoStack, UndoActions } from "editor/state/actions";
-import { useDragAndDrop } from "editor/ui/hooks/dnd";
-import { arrayReplace } from "editor/utils/arrays";
-import * as React from "react";
-import { CONTROL_COLOR } from "./colors";
+import { ChainGeometry, Vertex } from 'editor/model/geometry';
+import { DisplayServiceModule } from 'editor/services/DisplayService';
+import { GridServiceModule } from 'editor/services/GridService';
+import { editChain, GeometryActions, pushSceneToUndoStack, UndoActions } from 'editor/state/actions';
+import { useDragAndDrop } from 'editor/ui/hooks/dnd';
+import { arrayReplace } from 'editor/utils/arrays';
+import * as React from 'react';
+
+import { CONTROL_COLOR } from './colors';
 
 export interface ChainVertexManipulatorProps {
     vertexIndex: number;
@@ -14,14 +16,14 @@ export interface ChainVertexManipulatorProps {
 
 export function ChainVertexManipulator(props: ChainVertexManipulatorProps) {
     const vert = props.chain.vertices[props.vertexIndex];
-    const { displayService, gridService } = React.useContext(ServicesContext);
-
+    const gridService = GridServiceModule.get();
+    const displayService = DisplayServiceModule.get();
     const vertexHalfWidth = displayService.zoomIndependentLength(5);
     const lineWidth = displayService.zoomIndependentLength(1);
     const strokeColor = CONTROL_COLOR;
 
-    const startDragging = useDragAndDrop({
-        start: (evt: React.MouseEvent) => {
+    const startDragging = useDragAndDrop<Vertex>()({
+        start: (evt: MouseEvent) => {
             const startPos = displayService.screenCoordsToWorldCoords({x: evt.clientX, y: evt.clientY});
             props.dispatch(pushSceneToUndoStack());
             return {
@@ -34,7 +36,7 @@ export function ChainVertexManipulator(props: ChainVertexManipulatorProps) {
             newPos.x -= startOffset.x;
             newPos.y -= startOffset.y;
 
-            const snapped = gridService.snapToGrid({ left: newPos.x, right: newPos.x, top: newPos.y, bottom: newPos.y });
+            const snapped = gridService.snapRectToGrid({ left: newPos.x, right: newPos.x, top: newPos.y, bottom: newPos.y });
 
             props.dispatch(editChain({ ownerId: props.chain.ownerId, chainId: props.chain.geometryId, vertices: 
                 arrayReplace(props.chain.vertices, props.vertexIndex, { x: snapped.left, y: snapped.top })

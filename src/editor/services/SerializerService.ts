@@ -4,6 +4,7 @@ import { ObjectGeometry, Transform } from 'editor/model/geometry';
 import { WorldObject } from 'editor/model/object';
 import { Scene } from 'editor/model/scene';
 import { ObjectSprite } from 'editor/model/sprite';
+import { createServiceModule } from './injector';
 
 export class SerializerService {
 
@@ -45,3 +46,5 @@ export class SerializerService {
         };
     }
 }
+
+export const SerializerServiceModule = createServiceModule(SerializerService);

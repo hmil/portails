@@ -329,12 +329,22 @@ export class Graphics {
     public render(camera: Camera): void {
         const transform = camera.transform;
         const view = mat3.create();
-        mat3.scale(view, view, vec2.fromValues(1/SCREEN_WIDTH, 1/SCREEN_HEIGHT));
+
+        const ratioX = this.width / SCREEN_WIDTH;
+        const ratioY = this.height / SCREEN_HEIGHT;
+        if (ratioX < ratioY) { // viewport is x-bound
+            mat3.scale(view, view, vec2.fromValues(1/SCREEN_WIDTH, 1/(this.height / this.width * SCREEN_WIDTH)));
+            mat3.translate(view, view, vec2.fromValues(0, ((this.height / this.width * SCREEN_WIDTH) - SCREEN_HEIGHT) / 2));
+        } else {
+            mat3.scale(view, view, vec2.fromValues(1/(this.width / this.height * SCREEN_HEIGHT), 1/SCREEN_HEIGHT));
+            mat3.translate(view, view, vec2.fromValues(((this.width / this.height * SCREEN_HEIGHT) - SCREEN_WIDTH) / 2, 0));
+        }
         mat3.mul(view, view, transform);
+
         const projectionMatrix = mat4.create();
         const zNear = 0.1;
         const zFar = 100.0;
-        mat4.ortho(projectionMatrix, -(this.width/this.height)/4, (this.width/this.height)/4, -0.5, 0.5, zNear, zFar);
+        mat4.ortho(projectionMatrix, -0.5, 0.5, -0.5, 0.5, zNear, zFar);
 
         const viewMatrix = mat4.create();
         mat4.lookAt(viewMatrix, vec3.fromValues(0.5, 0.5, -1.0), vec3.fromValues(0.5, 0.5, 0), vec3.fromValues(0, -1, 0));
@@ -360,13 +370,12 @@ export class Graphics {
 
     private resizeCanvasToDisplaySize() {
         const gl = this.gl;
-        const boundingRect = this.el.parentElement!.getBoundingClientRect();
+        const boundingRect = this.el.getBoundingClientRect();
         this.pixelRatio = window.devicePixelRatio;
         this.width = boundingRect.width * this.pixelRatio;
         this.height = boundingRect.height * this.pixelRatio;
         if (gl.canvas.width != this.width || gl.canvas.height != this.height) {
             this.el.style.transformOrigin = '0 0'
-            this.el.style.transform = `scale(${1/this.pixelRatio})`;
             gl.canvas.width = this.width;
             gl.canvas.height = this.height;
             gl.viewport(0, 0, this.width, this.height);

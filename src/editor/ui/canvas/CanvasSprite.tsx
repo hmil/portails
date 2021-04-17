@@ -1,15 +1,22 @@
-import { ServicesContext } from 'editor/context/ServicesContext';
-import { Rectangle, Transform, Vertex } from 'editor/model/geometry';
+import { Rectangle, Vertex } from 'editor/model/geometry';
 import { WorldObject } from 'editor/model/object';
 import { ObjectSprite } from 'editor/model/sprite';
-import { editSprite, ObjectActions, pushSceneToUndoStack, selectObject, selectSprite, SpriteActions, UndoActions } from 'editor/state/actions';
+import { GridService, GridServiceModule } from 'editor/services/GridService';
+import {
+    editSprite,
+    ObjectActions,
+    pushSceneToUndoStack,
+    selectObject,
+    selectSprite,
+    SpriteActions,
+    UndoActions,
+} from 'editor/state/actions';
 import produce from 'immer';
 import * as React from 'react';
 
-import { callback, memo } from '../hooks/utils';
-import { Coords, DisplayService } from '../../services/DisplayService';
-import { GridService } from 'editor/services/GridService';
+import { Coords, DisplayService, DisplayServiceModule } from '../../services/DisplayService';
 import { useDragAndDrop } from '../hooks/dnd';
+import { memo } from '../hooks/utils';
 
 export interface CanvasSpriteProps {
     sprite: ObjectSprite;
@@ -21,25 +28,33 @@ export function CanvasSprite(props: CanvasSpriteProps) {
 
     const [isHover, setHover ] = React.useState(false);
 
-    const { displayService, gridService } = React.useContext(ServicesContext);
+    const displayService = DisplayServiceModule.get();
+    const gridService = GridServiceModule.get();
     const width = props.sprite.properties.transform.scaleX;
     const height = props.sprite.properties.transform.scaleY;
     const x = props.sprite.properties.transform.x - width/2;
     const y = props.sprite.properties.transform.y - height / 2;
-    const onMouseDown = useDragAndDrop(dndHandlers(props.parent, props.sprite, props.dispatch, displayService, gridService));
-    return <g onMouseDown={onMouseDown} onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}>
+    const onMouseDown = useDragAndDrop<Vertex>()(dndHandlers(props.parent, props.sprite, props.dispatch, displayService, gridService));
+
+    const mirrorX = width < 0;
+    const mirrorY = height < 0;
+    const rotationDegrees = props.sprite.properties.transform.rotation * 180 / Math.PI;
+
+    return <g onMouseDown={(evt) => {
+        props.dispatch(selectSprite(props.sprite));
+        onMouseDown(evt);
+    }} onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}>
         <image 
             preserveAspectRatio="none"
             href={props.sprite.properties.src}
-            width={width}
-            height={height}
-            x={x}
-            y={y}></image>
-        { isHover ? <rect width={width}
-            height={height}
-            x={x}
-            y={y}
-            fill={'#f00'} fillOpacity="0.2"></rect> : undefined}
+            width={Math.abs(width)}
+            height={Math.abs(height)}
+            transform={`translate(${x}, ${y}) translate(${width/2}, ${height/2}) rotate(${rotationDegrees}) translate(${-width/2}, ${-height/2}) scale(${mirrorX ? -1 : 1}, ${mirrorY ? -1 : 1})`}></image>
+        { isHover ? <rect 
+            width={Math.abs(width)}
+            height={Math.abs(height)}
+            transform={`translate(${x}, ${y}) translate(${width/2}, ${height/2}) rotate(${rotationDegrees}) translate(${-width/2}, ${-height/2}) scale(${mirrorX ? -1 : 1}, ${mirrorY ? -1 : 1})`}
+            fill={'#fff'} fillOpacity="0.1"></rect> : undefined}
     </g>;
 }
 
@@ -50,11 +65,9 @@ const dndHandlers = memo((
     displayService: DisplayService,
     gridService: GridService
 ) => ({
-    start: (evt: React.MouseEvent): Vertex => {
-        dispatch(selectObject(parent));
+    start: (evt: MouseEvent): Vertex => {
         evt.preventDefault();
         evt.stopPropagation();
-        dispatch(selectSprite(model));
         dispatch(pushSceneToUndoStack());
         const startPos = displayService.screenCoordsToWorldCoords({x: evt.clientX, y: evt.clientY});
         return {
@@ -74,7 +87,7 @@ const dndHandlers = memo((
             right: newPos.x + model.properties.transform.scaleX/2,
         }
     
-        const snappedRect = gridService.snapToGrid(spriteRect);
+        const snappedRect = gridService.snapRectToGrid(spriteRect);
         const fixedCoords: Coords = {
             x: snappedRect.left + (snappedRect.right - snappedRect.left) / 2,
             y: snappedRect.top + (snappedRect.bottom - snappedRect.top) / 2,

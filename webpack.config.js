@@ -5,7 +5,7 @@ module.exports = {
     mode: process.env.NODE_ENV || 'development',
     entry: {
         app: './src/main.ts',
-        editor: './src/editor/main.ts'
+        editor: { import: './src/editor/main.ts' },
     },
     output: {
         path: path.resolve(__dirname, 'dist'),
@@ -39,15 +39,16 @@ module.exports = {
         ]
     },
     optimization: {
-        splitChunks: {
-            cacheGroups: {
-                commons: {
-                    test: /[\\/]node_modules[\\/]/,
-                    name: 'vendors',
-                    chunks: 'all'
-                }
-            }
-        }
+        // splitChunks: {
+        //     // chunks: 'all',
+        //     // cacheGroups: {
+        //     //     commons: {
+        //     //         test: /[\\/]node_modules[\\/]/,
+        //     //         name: 'vendors',
+        //     //         chunks: 'all'
+        //     //     }
+        //     // }
+        // }
     },
     externals: {
     },

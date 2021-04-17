@@ -1,6 +1,7 @@
-import { Rectangle } from 'editor/model/geometry';
+import { Rectangle, Vertex } from 'editor/model/geometry';
 import { Viewport } from 'editor/model/viewport';
 import { DisplayService } from './DisplayService';
+import { createServiceModule } from './injector';
 
 export interface GridConfig {
     stepX: number;
@@ -24,11 +25,29 @@ export class GridService {
 
     constructor(private config: GridConfig, private readonly displayService: DisplayService) {}
 
-    sync(config: GridConfig) {
-        this.config = config;
+    snapVertexToGrid(vertex: Vertex): Vertex {
+        if (this.config.enabled === false) {
+            return vertex;
+        }
+
+        const snapDistance = this.displayService.zoomIndependentLength(SNAP_DISTANCE);
+
+        const tmp: Vertex = {...vertex};
+
+        const dX = this.snapDiff(vertex.x, this.config.stepX, this.config.offsetX, snapDistance);
+        const dY = this.snapDiff(vertex.y, this.config.stepY, this.config.offsetY, snapDistance);
+
+        if (Math.abs(dX) < snapDistance) {
+            tmp.x -= dX;
+        }
+        if (Math.abs(dY) < snapDistance) {
+            tmp.y -= dY;
+        }
+
+        return tmp;
     }
 
-    snapToGrid(rect: Rectangle): Rectangle {
+    snapRectToGrid(rect: Rectangle): Rectangle {
         if (this.config.enabled === false) {
             return rect;
         }
@@ -65,3 +84,5 @@ export class GridService {
         }
     }
 }
+
+export const GridServiceModule = createServiceModule(GridService);

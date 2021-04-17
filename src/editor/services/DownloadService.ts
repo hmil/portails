@@ -1,3 +1,4 @@
+import { createServiceModule } from "./injector";
 
 export class DownloadService {
 
@@ -11,3 +12,5 @@ export class DownloadService {
         document.body.removeChild(a);
     }
 }
+
+export const DownloadServiceModule = createServiceModule(DownloadService);

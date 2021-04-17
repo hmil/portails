@@ -3,7 +3,7 @@ import { rigidBodyTransform } from 'lib/glutils';
 import { Solid } from 'lib/graphics/solid';
 import { Sprite } from 'lib/graphics/sprite';
 import { PORTAL_COLOR_1, PORTAL_COLOR_2 } from 'lib/PortalService';
-import { Chain, Circle, Contact, Edge, Shape, Vec2 } from 'planck-js';
+import { Body, Chain, Circle, Contact, Edge, Shape, Vec2 } from 'planck-js';
 
 import { GameObject } from './game-object';
 import { Portal } from './portal';
@@ -87,19 +87,19 @@ export class Projectile extends GameObject<ProjectileProps> implements Sprite {
     }
 
     private correctImpactNormal(normal: Vec2, tangent: Vec2) {
-        const newNormal = Vec2(tangent.y, tangent.x);
+        const newNormal = Vec2(-tangent.y, tangent.x);
         if (this.dot(normal, newNormal) < 0) {
             return newNormal.mul(-1);
         }
         return newNormal;
     }
 
-    private getBounds(contact: Contact, shape: Shape): [Vec2, Vec2] | null {
+    private getBounds(contact: Contact, shape: Shape, body: Body): [Vec2, Vec2] | null {
         if (shape.m_type === 'chain') {
             const edge = new Edge(Vec2(0,0), Vec2(0,0));
             (shape as Chain).getChildEdge(edge, contact.getChildIndexA());
-
-            return [edge.m_vertex1, edge.m_vertex2]
+            const bodyPosition = body.getPosition();
+            return [edge.m_vertex1.clone().add(bodyPosition), edge.m_vertex2.clone().add(bodyPosition)]
         }
         return null;
     }
@@ -132,7 +132,7 @@ export class Projectile extends GameObject<ProjectileProps> implements Sprite {
                     return;
                 }
                 const shape = resolved.fixture.getShape();
-                const bounds = this.getBounds(contact, shape);
+                const bounds = this.getBounds(contact, shape, resolved.fixture.getBody());
                 let point = resolved.point;
                 let normal = resolved.normal;
                 if (bounds != null) {

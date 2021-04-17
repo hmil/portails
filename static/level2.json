@@ -1,0 +1,79 @@
+{
+    "objects": [
+        {
+            "name": "New Object 0",
+            "transform": {
+                "a": 0,
+                "x": -1.5,
+                "y": -1.5,
+                "sX": 1,
+                "sY": 1
+            },
+            "sprites": [
+                {
+                    "name": "my sprite",
+                    "src": "/static/tile-pack-2/tiles/shallow_slope_right_03.png",
+                    "transform": {
+                        "a": 0,
+                        "x": 0.5,
+                        "y": 0.5,
+                        "sX": 1,
+                        "sY": 1
+                    },
+                    "background": false
+                },
+                {
+                    "name": "my sprite",
+                    "src": "/static/tile-pack-2/tiles/shallow_slope_left_01.png",
+                    "transform": {
+                        "a": 0,
+                        "x": 1.5,
+                        "y": 0.5,
+                        "sX": 1,
+                        "sY": 1
+                    },
+                    "background": false
+                },
+                {
+                    "name": "my sprite",
+                    "src": "/static/tile-pack-2/tiles/horizontal_to_vertical_passthrough_left.png",
+                    "transform": {
+                        "a": 0,
+                        "x": -0.5,
+                        "y": 0.5,
+                        "sX": 1,
+                        "sY": 1
+                    },
+                    "background": false
+                }
+            ],
+            "geometries": []
+        },
+        {
+            "name": "New Object 4",
+            "transform": {
+                "a": 0,
+                "x": -2.7755575615628914e-17,
+                "y": 0,
+                "sX": 1,
+                "sY": 1
+            },
+            "sprites": [
+                {
+                    "name": "my sprite",
+                    "src": "/static/tile-pack-2/background/background.png",
+                    "transform": {
+                        "a": 0,
+                        "x": -0.3125,
+                        "y": -3,
+                        "sX": 9.375,
+                        "sY": 6
+                    },
+                    "background": true
+                }
+            ],
+            "geometries": []
+        }
+    ],
+    "version": 2
+}

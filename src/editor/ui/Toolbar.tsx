@@ -1,5 +1,5 @@
-import { ServicesContext } from 'editor/context/ServicesContext';
 import { StateContext } from 'editor/context/StateContext';
+import { PersistenceServiceModule } from 'editor/services/PersistenceService';
 import { appendVertexToCurrentChain, prependVertexToCurrentChain, toggleGridSnapping } from 'editor/state/actions';
 import { popSceneFromRedoStack, popSceneFromUndoStack, pushSceneToUndoStack } from 'editor/state/actions/undo';
 import { AppActions } from 'editor/state/reducer';
@@ -10,7 +10,7 @@ import { callback } from './hooks/utils';
 
 export function Toolbar() {
     const { state, dispatch } = React.useContext(StateContext);
-    const { persistenceService } = React.useContext(ServicesContext);
+    const persistenceService = PersistenceServiceModule.get();
 
     const isGeometrySelection = state.scene.selection?.type === 'geometry';
 

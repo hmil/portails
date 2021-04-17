@@ -25,7 +25,7 @@ export function SpriteListItem(props: SpriteListItemProps) {
         onClick={selectCallback}
         selected={props.selected}
     >
-        <img className="sprite-list-item" src={props.sprite.properties.src} />
+        <img className="sprite-miniature" src={props.sprite.properties.src} />
         <EditableText onFocus={() => props.dispatch(selectSprite(props.sprite))} forceEditing={props.fresh} value={props.sprite.properties.name} onChange={changeNameCallback}></EditableText>
     </ListItem>;
 }

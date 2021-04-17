@@ -27,8 +27,8 @@ export function worldObjectDefaults(guid: string): WritableDraft<WorldObject> {
             transform: transformDefaults(),
         },
         boundingBox: defaultBoundingBox(),
-        geometries: [geometryDefaults(guid, 'default')],
-        sprites: [spriteDefaults(guid, 'default')]
+        geometries: [],
+        sprites: []
     };
     draft.boundingBox = computeObjectBoundingBox(draft);
     return draft;

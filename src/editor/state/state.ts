@@ -1,6 +1,6 @@
-import { worldObjectDefaults } from 'editor/model/object';
 import { Scene } from 'editor/model/scene';
 import { Viewport } from 'editor/model/viewport';
+import { DisplayCanvasRect } from 'editor/services/DisplayService';
 import { defaultGridConfig, GridConfig } from 'editor/services/GridService';
 
 /**
@@ -31,19 +31,32 @@ export type SceneSelection = SceneSpriteSelection | SceneGeometrySelection | Sce
 
 export type UndoStackObj = { scene: SceneState, next: UndoStackObj } | null;
 
+export interface GrabbedSprite {
+    type: 'sprite',
+    src: string;
+    clientX: number;
+    clientY: number;
+    width: number;
+    height: number;
+}
+
+export type GrabbedThing = GrabbedSprite;
+
 export interface AppState {
     scene: SceneState;
     undoStack: UndoStackObj;
     redoStack: UndoStackObj;
     viewport: Viewport;
+    canvasRect: DisplayCanvasRect,
     gridConfig: GridConfig;
+    grabbedThing: GrabbedThing | null;
 }
 
 export const appInitialState: AppState = {
     undoStack: null,
     redoStack: null,
     scene: {
-        objects: [worldObjectDefaults('default')],
+        objects: [],
         selection: null,
     },
     viewport: {
@@ -51,5 +64,9 @@ export const appInitialState: AppState = {
         centerY: 0,
         zoomFactor: 50
     },
-    gridConfig: defaultGridConfig
+    canvasRect: {
+        height: 100, width: 100, x: 0, y: 0
+    },
+    gridConfig: defaultGridConfig,
+    grabbedThing: null
 };

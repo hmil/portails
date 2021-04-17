@@ -1,11 +1,9 @@
-import { ServicesContext } from 'editor/context/ServicesContext';
 import { ObjectGeometry } from 'editor/model/geometry';
 import { WorldObject } from 'editor/model/object';
+import { DisplayServiceModule } from 'editor/services/DisplayService';
 import { GeometryActions, selectGeometry, UndoActions } from 'editor/state/actions';
 import { SceneSelection } from 'editor/state/state';
 import * as React from 'react';
-
-import { ChainVertexManipulator } from './manipulator/ChainVertexManipulator';
 
 export interface CanvasGeometryProps {
     geometry: ObjectGeometry;
@@ -17,7 +15,7 @@ export interface CanvasGeometryProps {
 export function CanvasGeometry(props: CanvasGeometryProps) {
 
     const [ isHover, setHover ] = React.useState(false);
-    const { displayService } = React.useContext(ServicesContext);
+    const displayService = DisplayServiceModule.get();
 
     const lineWidth = displayService.zoomIndependentLength((isHover || isSelected(props.geometry, props.selection)) ? 3 : 1);
     const clickWidth = displayService.zoomIndependentLength(10);

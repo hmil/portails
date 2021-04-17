@@ -1,7 +1,7 @@
-import { ServicesContext } from 'editor/context/ServicesContext';
 import { StateContext } from 'editor/context/StateContext';
 import { Viewport } from 'editor/model/viewport';
-import { scrollViewport, zoomViewport } from 'editor/state/actions';
+import { DragAndDropServiceModule } from 'editor/services/DragAndDropService';
+import { scrollViewport, setCanvasRect, zoomViewport } from 'editor/state/actions';
 import { getCurrentGeometry, getSelectedSprite } from 'editor/state/selectors';
 import * as React from 'react';
 
@@ -13,14 +13,22 @@ import { GeometryManipulator } from './manipulator/GeometryManipulator';
 import { ObjectManipulator } from './manipulator/ObjectManipulator';
 import { SpriteManipulator } from './manipulator/SpriteManipulator';
 
+interface DraggedSprite {
+    worldX: number;
+    worldY: number;
+    src: string;
+}
+
 export function Canvas() {
-    const { displayService } = React.useContext(ServicesContext);
     const { state, dispatch } = React.useContext(StateContext);
     const canvasEl = React.useRef<HTMLDivElement>(null);
 
     const boundingRect = canvasEl.current?.getBoundingClientRect();
     const viewBox = computeViewBox(state.viewport, boundingRect);
-    displayService.sync(state.viewport, computeCanvasRect(boundingRect?.x ?? 0, boundingRect?.y ?? 0, boundingRect?.width ?? 0, boundingRect?.height ?? 0))
+    const canvasRect = computeCanvasRect(boundingRect?.x ?? 0, boundingRect?.y ?? 0, boundingRect?.width ?? 0, boundingRect?.height ?? 0);
+    React.useEffect(() => {
+        dispatch(setCanvasRect({canvasRect}));
+    }, [canvasRect]);
 
     const [resizeCounter, setResizeCounter] = React.useState(0);
 
@@ -56,6 +64,9 @@ export function Canvas() {
         canvasEl.current?.addEventListener('wheel', onWheel);
     }, [canvasEl.current, dispatch]);
 
+    const dragAndDropService = DragAndDropServiceModule.get();
+    const draggedSprite = dragAndDropService.getPendingDropItem();
+
     return (
         <div ref={canvasEl} className="canvas">
             <svg viewBox={viewBox} className="canvas-svg">
@@ -65,6 +76,13 @@ export function Canvas() {
                 { state.scene.objects.map(object => <ObjectManipulator model={object} dispatch={dispatch} selection={state.scene.selection} key={object.guid}></ObjectManipulator>) }
                 { currentSprite != null ? <SpriteManipulator sprite={currentSprite}></SpriteManipulator> : undefined }
                 { currentGeometry != null ? <GeometryManipulator geometry={currentGeometry} dispatch={dispatch}></GeometryManipulator> : undefined }
+                { draggedSprite != null ? <image 
+                    preserveAspectRatio="none"
+                    href={draggedSprite.src}
+                    width={draggedSprite.width}
+                    height={draggedSprite.height}
+                    x={draggedSprite.worldX - draggedSprite.width / 2}
+                    y={draggedSprite.worldY - draggedSprite.height / 2}></image> : undefined}
             </svg>
         </div>
     );

@@ -10,7 +10,7 @@ export interface CanvasObjectProps {
     dispatch: React.Dispatch<ObjectActions | SpriteActions | GeometryActions | UndoActions>;
 }
 
-export function CanvasObjectSprite(props: CanvasObjectProps) {
+export const CanvasObjectSprite = React.memo(function _CanvasObjectSprite(props: CanvasObjectProps) {
     const transform = props.model.properties.transform;
     return <g transform={`scale(${transform.scaleY} ${transform.scaleY}) translate(${transform.x} ${transform.y})`}>
         <title>{props.model.properties.name}</title>
@@ -25,4 +25,4 @@ export function CanvasObjectSprite(props: CanvasObjectProps) {
             ></CanvasSprite>)
         }
     </g>;
-}
+});

@@ -1,5 +1,7 @@
 import { Viewport } from 'editor/model/viewport';
-import { effect } from '../ui/hooks/utils';
+import * as React from 'react';
+import { effect, memo } from '../ui/hooks/utils';
+import { createServiceModule } from './injector';
 
 export interface DisplayCanvasRect {
     height: number;
@@ -20,27 +22,21 @@ export class DisplayService {
 
     constructor(private viewport: Viewport, private canvas: DisplayCanvasRect) { }
 
-    sync = effect((viewport: Viewport, canvas: DisplayCanvasRect) => {
-        this.setViewport(viewport);
-        this.setScreen(canvas);
-    });
-
-    private setViewport(viewport: Viewport) {
-        this.viewport = viewport;
-    }
-
-    private setScreen(screen: DisplayCanvasRect) {
-        this.canvas = screen;
-    }
-
     screenCoordsToWorldCoords(screenCoords: Coords): Coords {
         return {
-            x: (screenCoords.x - this.canvas.x - this.canvas.width / 2) / this.viewport.zoomFactor,
-            y: (screenCoords.y - this.canvas.y - this.canvas.height / 2) / this.viewport.zoomFactor
+            x: (screenCoords.x - this.canvas.x - this.canvas.width / 2) / this.viewport.zoomFactor + this.viewport.centerX,
+            y: (screenCoords.y - this.canvas.y - this.canvas.height / 2) / this.viewport.zoomFactor + this.viewport.centerY
         };
     }
 
     zoomIndependentLength(length: number): number {
         return length / this.viewport.zoomFactor;
     }
+
+    isInsideCanvas(coords: Coords) {
+        return coords.x < this.canvas.x + this.canvas.width && coords.x > this.canvas.x &&
+                coords.y < this.canvas.y + this.canvas.height && coords.y > this.canvas.y;
+    }
 }
+
+export const DisplayServiceModule = createServiceModule(DisplayService);
