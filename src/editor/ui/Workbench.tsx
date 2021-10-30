@@ -1,6 +1,7 @@
 import { StateContext } from 'editor/context/StateContext';
 import { DragAndDropServiceModule } from 'editor/services/DragAndDropService';
 import { KeyboardShortcutServiceModule } from 'editor/services/KeyboardShortcutService';
+import { PersistenceServiceModule } from 'editor/services/PersistenceService';
 import { getSelectedSprite } from 'editor/state/selectors';
 import * as React from 'react';
 
@@ -20,6 +21,11 @@ export function Workbench() {
     const selectedSprite = getSelectedSprite(state);
     KeyboardShortcutServiceModule.get().useKeyboardShortcuts();
     const dragAndDropService = DragAndDropServiceModule.get();
+    const persistenceService = PersistenceServiceModule.get();
+
+    React.useEffect(() => {
+        persistenceService.load();
+    }, []);
 
     return <div className="workbench" onMouseMove={dragAndDropService.onWorkbenchMouseMove} onMouseUp={dragAndDropService.onWorkbenchMouseUp}>
         <Toolbar></Toolbar>

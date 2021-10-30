@@ -8,7 +8,7 @@ import { AssetSpriteItem } from './AssetSpriteItem';
 type TilesDirectory = { name: string; data: Array<string | TilesDirectory> };
 
 const AVAILABLE_TILES: TilesDirectory = {
-    "name": "/",
+    "name": ".",
     "data": [
         {
             "name": "static",
@@ -241,13 +241,13 @@ function getTilesForPath(path: string): TilesDirectory | null{
             return null;
         }
         return dir;
-    }, AVAILABLE_TILES);
+    }, { name: "/", data: [AVAILABLE_TILES] });
 }
 
 
 export function AssetsPanel() {
 
-    const [ path, setPath ] = React.useState('/static/tile-pack-2/tiles');
+    const [ path, setPath ] = React.useState('./static/tile-pack-2/tiles');
     const { state, dispatch } = React.useContext(StateContext);
 
     const tiles = getTilesForPath(path);

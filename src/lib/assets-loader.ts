@@ -35,7 +35,7 @@ export class AssetsLoader {
         .map(k => [
             k, library[k]
         ] as const)
-        .map(([k, v]) => this.loadImage(v.src).then(img => [k, img, v] as const)));
+        .map(([k, v]) => this.loadImage(v.src.replace(/^\//, './')).then(img => [k, img, v] as const)));
 
         return loaded.reduce((acc, [k, image, sprite]) => {
             acc[k] = image;

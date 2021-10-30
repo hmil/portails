@@ -2,14 +2,13 @@ import { PortailsScene } from "dto";
 import { vec2 } from "gl-matrix";
 import { Context } from "lib/context";
 import { StandardSprite } from "lib/graphics/standard-sprite";
-import { Level1 } from "lib/levels/level1";
 import { PlayerCharacter } from "lib/objects/player-character";
 import { PORTAL_PROJECTILE_CATEGORY } from "lib/objects/projectile";
 import { Chain, Vec2 } from "planck-js";
 
 export async function loadLevel(context: Context) {
 
-    const levelData = await fetch('/static/level.json');
+    const levelData = await fetch('./static/level.json');
     const validationResult = PortailsScene.validate(await levelData.json());
 
     if (!validationResult.success) {
@@ -29,7 +28,7 @@ export async function loadLevel(context: Context) {
                 return;
             }
             const image = new Image();
-            image.src = sprite.src;
+            image.src = sprite.src.replace(/^\//, './'); // Transform absolute paths to relative
             images.set(sprite.src, image);
 
             return new Promise((resolve, reject) => {

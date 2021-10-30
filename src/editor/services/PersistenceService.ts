@@ -26,7 +26,7 @@ export class PersistenceService {
     }
 
     load = async () => {
-        const response = await fetch('/static/level.json');
+        const response = await fetch('./static/level.json');
         const json = await response.text();
         const scene = this.deserializerService.deserialize(json);
         this.dispatch(loadScene({scene}));

@@ -57,7 +57,7 @@ export class DeserializerService {
             ownerId,
             properties: {
                 name: sprite.name,
-                src: sprite.src,
+                src: sprite.src.replace(/^\//, './'),
                 transform: this.hydrateTransform(sprite.transform),
                 background: sprite.background ?? false
             },
