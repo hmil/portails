@@ -17,7 +17,7 @@ export const createObject = action('createObject', (s: AppState, data: { guid: s
 }));
 
 export const deleteSelectedObjects = action('deleteSelectedObjects', (s: AppState) => produce(s, draft => {
-    draft.scene.objects = draft.scene.objects.filter(obj => draft.scene.selection?.objectId === obj.guid);
+    draft.scene.objects = draft.scene.objects.filter(obj => draft.scene.selection?.objectId !== obj.guid);
 }));
 
 

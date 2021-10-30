@@ -245,7 +245,7 @@
                     "src": "/static/tile-pack-2/tiles/fill.png",
                     "transform": {
                         "a": 0,
-                        "x": 8.287182415686265,
+                        "x": 8.271276466819085,
                         "y": 1.4908848972011621,
                         "sX": 4.542552933638172,
                         "sY": 1.0182302055976757
@@ -1030,7 +1030,7 @@
                         },
                         {
                             "x": 7,
-                            "y": -13
+                            "y": -10
                         }
                     ]
                 }
@@ -1100,7 +1100,7 @@
                     "transform": {
                         "a": 0,
                         "x": -7.5,
-                        "y": -0.5,
+                        "y": -0.4999999999999999,
                         "sX": 1,
                         "sY": 1
                     },
@@ -1292,9 +1292,9 @@
                     "transform": {
                         "a": 0,
                         "x": -16.1464550915563,
-                        "y": 1.1507788703074002,
+                        "y": 0.93292113098948,
                         "sX": 12.292910183112602,
-                        "sY": 5.6984422593851995
+                        "sY": 6.13415773802104
                     },
                     "background": false
                 },
@@ -1309,6 +1309,186 @@
                         "sY": 1
                     },
                     "background": false
+                },
+                {
+                    "name": "my sprite",
+                    "src": "/static/tile-pack-2/tiles/top.png",
+                    "transform": {
+                        "a": 0,
+                        "x": -8.5,
+                        "y": -2.5,
+                        "sX": 1,
+                        "sY": 1
+                    },
+                    "background": false
+                },
+                {
+                    "name": "my sprite",
+                    "src": "/static/tile-pack-2/tiles/shallow_slope_right_03.png",
+                    "transform": {
+                        "a": 0,
+                        "x": -7.5,
+                        "y": -2.5,
+                        "sX": 1,
+                        "sY": 1
+                    },
+                    "background": false
+                },
+                {
+                    "name": "my sprite",
+                    "src": "/static/tile-pack-2/tiles/top.png",
+                    "transform": {
+                        "a": 0,
+                        "x": -9.5,
+                        "y": -2.5,
+                        "sX": 1,
+                        "sY": 1
+                    },
+                    "background": false
+                },
+                {
+                    "name": "my sprite",
+                    "src": "/static/tile-pack-2/tiles/horizontal_to_vertical_end_right.png",
+                    "transform": {
+                        "a": 0,
+                        "x": -10.5,
+                        "y": -2.5,
+                        "sX": 1,
+                        "sY": 1
+                    },
+                    "background": false
+                },
+                {
+                    "name": "my sprite 1",
+                    "src": "/static/tile-pack-2/tiles/fill.png",
+                    "transform": {
+                        "a": 0,
+                        "x": -17.1464550915563,
+                        "y": -7.282155749058373,
+                        "sX": 12.292910183112602,
+                        "sY": 10.564311498116746
+                    },
+                    "background": false
+                },
+                {
+                    "name": "my sprite",
+                    "src": "/static/tile-pack-2/tiles/right_edge.png",
+                    "transform": {
+                        "a": 0,
+                        "x": -10.5,
+                        "y": -3.5,
+                        "sX": 1,
+                        "sY": 1
+                    },
+                    "background": false
+                },
+                {
+                    "name": "my sprite 1",
+                    "src": "/static/tile-pack-2/tiles/right_edge.png",
+                    "transform": {
+                        "a": 0,
+                        "x": -10.5,
+                        "y": -4.5,
+                        "sX": 1,
+                        "sY": 1
+                    },
+                    "background": false
+                },
+                {
+                    "name": "my sprite 2",
+                    "src": "/static/tile-pack-2/tiles/right_edge.png",
+                    "transform": {
+                        "a": 0,
+                        "x": -10.5,
+                        "y": -5.5,
+                        "sX": 1,
+                        "sY": 1
+                    },
+                    "background": false
+                },
+                {
+                    "name": "my sprite 3",
+                    "src": "/static/tile-pack-2/tiles/right_edge.png",
+                    "transform": {
+                        "a": 0,
+                        "x": -10.5,
+                        "y": -6.5,
+                        "sX": 1,
+                        "sY": 1
+                    },
+                    "background": false
+                },
+                {
+                    "name": "my sprite 4",
+                    "src": "/static/tile-pack-2/tiles/right_edge.png",
+                    "transform": {
+                        "a": 0,
+                        "x": -10.5,
+                        "y": -7.5,
+                        "sX": 1,
+                        "sY": 1
+                    },
+                    "background": false
+                },
+                {
+                    "name": "my sprite 5",
+                    "src": "/static/tile-pack-2/tiles/right_edge.png",
+                    "transform": {
+                        "a": 0,
+                        "x": -10.5,
+                        "y": -8.5,
+                        "sX": 1,
+                        "sY": 1
+                    },
+                    "background": false
+                },
+                {
+                    "name": "my sprite 6",
+                    "src": "/static/tile-pack-2/tiles/right_edge.png",
+                    "transform": {
+                        "a": 0,
+                        "x": -10.5,
+                        "y": -9.5,
+                        "sX": 1,
+                        "sY": 1
+                    },
+                    "background": false
+                },
+                {
+                    "name": "my sprite 7",
+                    "src": "/static/tile-pack-2/tiles/right_edge.png",
+                    "transform": {
+                        "a": 0,
+                        "x": -10.5,
+                        "y": -10.5,
+                        "sX": 1,
+                        "sY": 1
+                    },
+                    "background": false
+                },
+                {
+                    "name": "my sprite 8",
+                    "src": "/static/tile-pack-2/tiles/right_edge.png",
+                    "transform": {
+                        "a": 0,
+                        "x": -10.5,
+                        "y": -11.5,
+                        "sX": 1,
+                        "sY": 1
+                    },
+                    "background": false
+                },
+                {
+                    "name": "my sprite 9",
+                    "src": "/static/tile-pack-2/tiles/right_edge.png",
+                    "transform": {
+                        "a": 0,
+                        "x": -10.5,
+                        "y": -12.5,
+                        "sX": 1,
+                        "sY": 1
+                    },
+                    "background": false
                 }
             ],
             "geometries": [
@@ -1316,8 +1496,12 @@
                     "name": "New Geometry 66",
                     "vertices": [
                         {
-                            "x": -7,
-                            "y": -2.499774277642594
+                            "x": -10.128478100275306,
+                            "y": -3
+                        },
+                        {
+                            "x": -8,
+                            "y": -3
                         },
                         {
                             "x": -2,
@@ -1346,6 +1530,19 @@
                         {
                             "x": -9.128092105497052,
                             "y": 3
+                        }
+                    ]
+                },
+                {
+                    "name": "New Geometry 154",
+                    "vertices": [
+                        {
+                            "x": -10,
+                            "y": -3
+                        },
+                        {
+                            "x": -10,
+                            "y": -6
                         }
                     ]
                 }
@@ -1487,7 +1684,7 @@
                     "transform": {
                         "a": 0,
                         "x": 7.964065595920365,
-                        "y": 0.4972460383614794,
+                        "y": 0.4972460383614796,
                         "sX": 13.92813119184073,
                         "sY": 4.994492076722959
                     },
@@ -1623,7 +1820,7 @@
                         "sX": 0.92578125,
                         "sY": 1.69921875
                     },
-                    "background": false
+                    "background": true
                 },
                 {
                     "name": "my sprite",
@@ -1754,6 +1951,73 @@
                         "y": -5.943232307017269,
                         "sX": 0.3515625,
                         "sY": 0.40625
+                    },
+                    "background": false
+                }
+            ],
+            "geometries": [
+                {
+                    "name": "New Geometry 155",
+                    "vertices": [
+                        {
+                            "x": 0,
+                            "y": -3
+                        },
+                        {
+                            "x": 3.382836782735298,
+                            "y": -3
+                        },
+                        {
+                            "x": 3.4862583619299476,
+                            "y": -3.8283678273529795
+                        },
+                        {
+                            "x": 3.6410221677165575,
+                            "y": -4.365968415874887
+                        },
+                        {
+                            "x": 3.722476802341089,
+                            "y": -5
+                        },
+                        {
+                            "x": 3.6980404119537296,
+                            "y": -5.6497450711145145
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "New Object 155",
+            "transform": {
+                "a": 0,
+                "x": 0,
+                "y": 0,
+                "sX": 1,
+                "sY": 1
+            },
+            "sprites": [],
+            "geometries": []
+        },
+        {
+            "name": "New Object 160",
+            "transform": {
+                "a": 0,
+                "x": -12,
+                "y": -8,
+                "sX": 1,
+                "sY": 1
+            },
+            "sprites": [
+                {
+                    "name": "my sprite",
+                    "src": "/static/tile-pack-2/overlay_props/tile_set_overlay_16.png",
+                    "transform": {
+                        "a": 0,
+                        "x": 0.65234375,
+                        "y": 0.81640625,
+                        "sX": 1.3046875,
+                        "sY": 1.6328125
                     },
                     "background": false
                 }

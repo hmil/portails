@@ -25,7 +25,7 @@ export function ObjectsPanel() {
             </div>
             <div className="actions-container">
                 <Button onClick={createObjectCallback(dispatch, setFreshObject)} value="+" tooltip="Add object"></Button>
-                <Button onClick={deleteObjectCallback(dispatch)} value="-" tooltip="Add object"></Button>
+                <Button onClick={deleteObjectCallback(dispatch)} value="-" tooltip="Remove object"></Button>
                 <Button onClick={raiseObjectCallback(dispatch)} value="▲" tooltip="Move object up"></Button>
                 <Button onClick={lowerObjectCallback(dispatch)} value="▼" tooltip="Move object down"></Button>
             </div>
